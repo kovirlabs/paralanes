@@ -1,0 +1,11 @@
+[package]
+name = "paralanes-init"
+description = "PID 1 for the paralanes appliance image (Linux only)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

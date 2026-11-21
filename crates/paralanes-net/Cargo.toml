@@ -1,0 +1,11 @@
+[package]
+name = "paralanes-net"
+description = "Network backend that submits channel programs to paralanes-chand"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
