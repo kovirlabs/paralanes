@@ -67,7 +67,7 @@ so.
 
 | Agent | Machine | OS | Role in this repo |
 | --- | --- | --- | --- |
-| A | Dell PowerEdge, 2x Xeon Silver (10 cores each), no GPU | Linux guest on Proxmox, cores pinned, both NUMA nodes exposed | Runs the scheduler and drives M9 tests; builds the appliance image (M10) |
+| A | Dell PowerEdge R440, 2x Xeon Silver 4214 (12 cores each, 24 total), 160 GB ECC, no GPU | Linux guest on Proxmox, cores pinned, both NUMA nodes exposed | Runs the scheduler and drives M9 tests; builds the appliance image (M10) |
 | B | Desktop, Ryzen 7 5700X (8 cores, AM4 Mini-ITX), Radeon RX 7800 XT 16 GB on PCIe 3.0 x16, 1 GbE | Windows | Runs `paralanes-chand`; contributes atlas runs. Record which wgpu backend is used (Vulkan or DX12) |
 | C | MacBook Pro, M5 Pro, 24 GB unified memory | macOS, AArch64 | Runs `paralanes-chand`; contributes atlas runs. Benchmark plugged in, lid open, power mode recorded |
 
@@ -158,5 +158,6 @@ Do not edit run files after they are committed.
 ## Open decisions (TBD)
 
 - GitHub owner for the four repos
-- Remaining hardware details in `docs/machines.md`: Dell CPU models, memory and
-  network; MacBook network; the switch
+- Remaining hardware details in `docs/machines.md`: Dell network and PCIe
+  slots; MacBook network; the switch
+- Size of agent A's Proxmox guest (spec assumes 20 cores, 10 per socket)

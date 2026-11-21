@@ -15,6 +15,8 @@ Nothing has been measured yet.
   version, wgpu backend (Vulkan, DX12 or Metal), GPU host link (PCIe
   generation and width, or unified memory), network link type and speed for
   runs across machines, Rust version and the exact command.
+- Multi-socket runs also record memory per NUMA node (DIMM count and size)
+  and which cores the guest was pinned to.
 - When hardware changes, the affected runs are repeated and added as new
   files; old runs stay as the record of the old hardware.
 - MacBook runs: plugged in, lid open, power mode recorded.

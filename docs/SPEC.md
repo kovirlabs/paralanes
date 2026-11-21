@@ -44,7 +44,7 @@ Each machine proves one part of the design alone; a network backend then joins t
 
 | Aspect | Dell server (agent A) | Ryzen desktop (agent B) | MacBook Pro (agent C) |
 | --- | --- | --- | --- |
-| Hardware | Two Xeon Silver CPUs, 10 cores each; no GPU | Ryzen 7 5700X (8 cores, one shared L3) on an AM4 Mini-ITX board; Radeon RX 7800 XT, 16 GB, on a PCIe 3.0 x16 link; 1 GbE | Apple M5 Pro, 24 GB unified memory |
+| Hardware | PowerEdge R440: two Xeon Silver 4214 CPUs, 12 cores each; 160 GB ECC memory, unevenly split between sockets; no GPU | Ryzen 7 5700X (8 cores, one shared L3) on an AM4 Mini-ITX board; Radeon RX 7800 XT, 16 GB, on a PCIe 3.0 x16 link; 1 GbE | Apple M5 Pro, 24 GB unified memory |
 | Target | x86-64 Linux guest on Proxmox | x86-64 Windows | AArch64 macOS |
 | Role | Op format and CPU reference (M1); two-socket check of `stagelanes` (M2, M6); `diagsteno` (M7, M8); scheduler and test driver for the join (M9); appliance image (M10) | Main `stagelanes` machine on bare metal (M2, M6); discrete-GPU channel processor through Vulkan or DX12 (M3, M5) | Unified-memory channel processor through Metal (M4, M5) |
 | Proves alone | Placement by socket: the gain or loss from keeping each stage's memory on its own socket; durability (R8) | Latency holds at 90% core load (R2); GPU output equals the CPU reference (R7); the input size where the GPU starts to win | A native AArch64 run (R4); R7 on a second GPU vendor; what the ops cost when the copy to the GPU disappears |
@@ -62,7 +62,7 @@ Full hardware details are in [`docs/machines.md`](machines.md). No machine in th
 4. **Score:** anomaly score per channel from its features.
 5. **Store:** batch feature records to `diagsteno-store` and flush.
 
-Queries are served off the stage cores. Stages hand off pointers in batches over `stagelanes-ring` queues, and a partition's memory lives on the same socket as the core that owns it. The core split is tuned with `stagelanes-bench` per machine; on the Dell a starting split of the 20 cores is 3 ingest, 1 sequence, 10 features (5 per socket), 2 score, 2 store, 2 for the OS and the channel scheduler.
+Queries are served off the stage cores. Stages hand off pointers in batches over `stagelanes-ring` queues, and a partition's memory lives on the same socket as the core that owns it. The core split is tuned with `stagelanes-bench` per machine; on the Dell, assuming a 20-core guest (10 cores per socket, leaving 4 of the 24 to Proxmox), a starting split is 3 ingest, 1 sequence, 10 features (5 per socket), 2 score, 2 store, 2 for the OS and the channel scheduler.
 
 When joined, an I/O core on the Dell sends bulk bytes to a GPU machine; stage cores still never touch payload. Two things stay unproven until new hardware arrives: the direct NVMe-to-VRAM path, and offload at PCIe speed rather than network speed. The Mac narrows the first gap by showing GPU work without the copy into video memory.
 
@@ -241,7 +241,8 @@ Each repo has its own `CLAUDE.md` with its crates, milestones, agents and rules.
 
 Decisions needed:
 
-- [ ] Remaining hardware details in `docs/machines.md`: Dell CPU models, memory and network; MacBook network; the switch.
+- [ ] Remaining hardware details in `docs/machines.md`: Dell network and PCIe slots; MacBook network; the switch.
+- [ ] Size of agent A's Proxmox guest (the spec assumes 20 cores, 10 per socket).
 - [ ] For M7: channel count, sample rate and sensor types for the synthetic data; storage format.
 
 Decided on 21 Nov 2026:
@@ -270,6 +271,7 @@ Risks:
 | Windows cannot fully fence cores off from the OS | p99 figures are noisier than on tuned Linux; the M6 gate is harder | Measure on a quiet system, report the distribution, and repeat on the Dell under Linux |
 | Stage handoffs cost a cache miss each | The pipeline is slower than one core doing everything | Few stages, batched handoffs, pointers only; M6 compares against a single-core baseline |
 | Two sockets on the Dell | Cross-socket memory access erases the gain | Partition memory per socket; `stagelanes-bench` reports remote-memory access counts |
+| The Dell's memory is unbalanced: 3 DIMMs on CPU 1, 2 on CPU 2, each on at most half its channels | Per-socket bandwidth differs, skewing the M6 socket-local result; the CPU 2 node has less memory | Record DIMMs per NUMA node in every run file; report each socket separately; a sixth matching DIMM balances them at 3 and 3 |
 | GPU round trip is slower than the CPU for small inputs | Latency gets worse, not better | M5 measures the crossover; the scheduler falls back to the CPU below it |
 | The Ryzen has fast AES and CRC instructions, and its GPU sits on a PCIe 3.0 link | The GPU may lose to the CPU on checksum and decrypt at every input size, because moving the data costs more than computing on it | A loss is a valid atlas result; FFT and filter over large batches are the likelier GPU wins; record driver version and PCIe link with every run; the MacBook is the second GPU check |
 | The Ryzen's Mini-ITX board has one PCIe slot, used by the GPU | A faster network card needs the M.2 slot through an adapter or a different board | Network upgrades start on the other machines or with a board change; tracked in `docs/machines.md` |
@@ -291,6 +293,7 @@ The spec was drafted for a single workspace with a ledger demo and three track b
 9. **Smaller fixes.** Hugepages became large pages, since Windows uses that term. The `ChannelBackend` list names the wgpu backends and defers CUDA. The scheduler's CPU fallback uses the crossover size from the atlas. The settled ledger-versus-real-workload question moved to Decided.
 
 10. **Hardware and adaptability (later on 21 Nov 2026).** The Ryzen desktop is a Ryzen 7 5700X with a Radeon RX 7800 XT, not an AM5 board with an RX 570; hardware details moved to `docs/machines.md`. Added [Adapting to new hardware](#adapting-to-new-hardware) and R9: placement and CPU fallback come from measured values, and link speed is a recorded test variable. Faster networking is deferred, not dropped.
+11. **Dell hardware (later on 21 Nov 2026).** The Dell is a PowerEdge R440 with two 12-core Xeon Silver 4214 CPUs (24 cores, not 20) and 160 GB of ECC memory split 96/64 GB between sockets. The 20-core stage split is kept as the starting guest size, leaving 4 cores to Proxmox, and the memory imbalance is added as a risk.
 
 ## Sources
 
