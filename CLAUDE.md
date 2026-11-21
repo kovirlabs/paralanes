@@ -158,6 +158,7 @@ Do not edit run files after they are committed.
 ## Open decisions (TBD)
 
 - GitHub owner for the four repos
-- Remaining hardware details in `docs/machines.md`: Dell network and PCIe
+- Remaining hardware details in `docs/machines.md`: whether the Dell has riser
   slots; MacBook network; the switch
+- Whether M9 runs over a dedicated link on the Dell's spare port `eno2`
 - Size of agent A's Proxmox guest (spec assumes 20 cores, 10 per socket)

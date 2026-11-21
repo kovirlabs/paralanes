@@ -241,7 +241,8 @@ Each repo has its own `CLAUDE.md` with its crates, milestones, agents and rules.
 
 Decisions needed:
 
-- [ ] Remaining hardware details in `docs/machines.md`: Dell network and PCIe slots; MacBook network; the switch.
+- [ ] Remaining hardware details in `docs/machines.md`: whether the Dell has riser slots; MacBook network; the switch.
+- [ ] Whether M9 runs over a dedicated link on the Dell's spare port `eno2`.
 - [ ] Size of agent A's Proxmox guest (the spec assumes 20 cores, 10 per socket).
 - [ ] For M7: channel count, sample rate and sensor types for the synthetic data; storage format.
 
