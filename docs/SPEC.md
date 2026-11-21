@@ -62,7 +62,7 @@ Full hardware details are in [`docs/machines.md`](machines.md). No machine in th
 4. **Score:** anomaly score per channel from its features.
 5. **Store:** batch feature records to `diagsteno-store` and flush.
 
-Queries are served off the stage cores. Stages hand off pointers in batches over `stagelanes-ring` queues, and a partition's memory lives on the same socket as the core that owns it. The core split is tuned with `stagelanes-bench` per machine; on the Dell, assuming a 20-core guest (10 cores per socket, leaving 4 of the 24 to Proxmox), a starting split is 3 ingest, 1 sequence, 10 features (5 per socket), 2 score, 2 store, 2 for the OS and the channel scheduler.
+Stages are placed next to their I/O: on the Dell all network and storage devices attach to socket 0, so ingest and store run there (see `docs/machines.md`). Queries are served off the stage cores. Stages hand off pointers in batches over `stagelanes-ring` queues, and a partition's memory lives on the same socket as the core that owns it. The core split is tuned with `stagelanes-bench` per machine; on the Dell, assuming a 20-core guest (10 cores per socket, leaving 4 of the 24 to Proxmox), a starting split is 3 ingest, 1 sequence, 10 features (5 per socket), 2 score, 2 store, 2 for the OS and the channel scheduler.
 
 When joined, an I/O core on the Dell sends bulk bytes to a GPU machine; stage cores still never touch payload. Two things stay unproven until new hardware arrives: the direct NVMe-to-VRAM path, and offload at PCIe speed rather than network speed. The Mac narrows the first gap by showing GPU work without the copy into video memory.
 
@@ -229,7 +229,7 @@ Rules the scheduler enforces:
 | M10 | Appliance image | Boots in QEMU and runs `diagsteno`; R5 passes |
 | Later | New hardware | Faster links between machines (25 GbE, RDMA or similar), re-running the M9 tests unchanged with link speed as the variable; a PCIe 4.0 board for the Ryzen's GPU; several GPUs in one box; the direct NVMe-to-VRAM path on NVIDIA; the `Score` op. Defined when started |
 
-The Dell runs Proxmox, so agent A works in a Linux guest with the host CPU type, cores pinned one-to-one, both NUMA nodes exposed and large-page backing, with other guests stopped during benchmarks. On shared cores a latency result means nothing. R8 testing needs a drive passed through to the guest.
+The Dell runs Proxmox, so agent A works in a Linux guest with the host CPU type, cores pinned one-to-one, both NUMA nodes exposed and large-page backing, with other guests stopped during benchmarks. On shared cores a latency result means nothing. R8 testing needs a disk or volume passed through to the guest. The Dell has no NVMe: storage sits behind a MegaRAID SAS-3 3108 controller, whose write-cache mode is recorded with every durability run.
 
 If a step needs another machine, the agent writes the code and tests, marks them `#[ignore = "needs: <machine>"]`, notes it in the status file and continues.
 
@@ -241,7 +241,7 @@ Each repo has its own `CLAUDE.md` with its crates, milestones, agents and rules.
 
 Decisions needed:
 
-- [ ] Remaining hardware details in `docs/machines.md`: whether the Dell has riser slots; MacBook network; the switch.
+- [ ] Remaining hardware details in `docs/machines.md`: drives and cache mode behind the Dell's RAID controller; whether a riser is fitted; MacBook network; the switch.
 - [ ] Whether M9 runs over a dedicated link on the Dell's spare port `eno2`.
 - [ ] Size of agent A's Proxmox guest (the spec assumes 20 cores, 10 per socket).
 - [ ] For M7: channel count, sample rate and sensor types for the synthetic data; storage format.

@@ -54,7 +54,9 @@ are deliberately not recorded in this public repo.
 | Memory | 160 GB DDR4 registered ECC (multi-bit ECC), 5x 32 GB, all running at 2400 MT/s (the CPU's limit). Four are Samsung M393A4K40DB2-CVF (2933-rated); the one in A4 is a different 3200-rated module. 16 slots, 1 TB maximum |
 | Memory per socket | CPU 1 (slots A1, A2, A4): 3 DIMMs, 96 GB. CPU 2 (slots B1, B2): 2 DIMMs, 64 GB. At most 3 of 6 memory channels are populated on CPU 1 and 2 of 6 on CPU 2 |
 | Network | Onboard Broadcom NetXtreme BCM5720, 2x 1 GbE: `eno1` up at 1000 Mb/s (Proxmox bridge `vmbr0`), `eno2` unused and down |
-| PCIe slots | DMI reports one slot, "Mezzanine 1", PCIe 3, available. No riser slots were reported; whether risers are fitted is TBD (check in iDRAC or with `lspci -tv`) |
+| PCIe slots | No add-in cards. `lspci -tv` shows no empty riser-slot ports either, so most likely no riser is fitted (or its slots are disabled in BIOS); confirm in iDRAC. DMI lists one "Mezzanine 1" PCIe 3 slot as available |
+| Storage | Broadcom/LSI MegaRAID SAS-3 3108 RAID controller, plus chipset SATA and sSATA (AHCI). No NVMe devices. Drives behind the controller and its cache mode TBD |
+| I/O locality | All I/O is attached to CPU 1 (socket 0): the RAID controller on a CPU 1 root port, and both network ports and the BMC graphics through the C620 chipset. CPU 2 has no I/O devices |
 | Hypervisor | Proxmox VE 9.2.21, kernel 7.0.14-25-pve |
 | Guest for agent A | Linux, host CPU type, cores pinned one-to-one, both NUMA nodes exposed, large-page backing; guest size TBD |
 
@@ -78,12 +80,20 @@ What this means for the design:
   The CRC on every GPU result covers that gap.
 - **Secure Boot is on.** An appliance image booted on this hardware (M10 runs
   in QEMU first) would need signing or Secure Boot turned off.
+- **All I/O lives on socket 0.** Network and storage both enter through
+  CPU 1, which also has more memory. Ingest and store stages belong on
+  socket 0; socket 1 suits compute-only stages, and any data it touches from
+  the network or disk crosses the socket link first.
+- **No NVMe.** Storage is SAS or SATA behind a RAID controller, so the spec's
+  NVMe paths do not apply on this machine. For R8 the flush goes through the
+  controller: its write-cache mode (write-back with battery, or
+  write-through) decides what a flush means and is recorded with every
+  durability run.
+- **No free slot for a faster network card yet.** Adding one most likely
+  needs a riser fitted first.
 - **A spare 1 GbE port.** `eno2` is unused. Giving the M9 join its own link
   on `eno2` keeps Proxmox management and other guests' traffic out of the
   measurements. Bonding both ports would not speed up a single connection.
-- **Room for a faster network card is unconfirmed.** The Mezzanine slot is
-  free, but whether it or a riser slot can take a 25 GbE card is still to be
-  checked.
 - **Other guests are running.** The host had 63 GiB in use when recorded. Stop
   other guests during benchmarks.
 
