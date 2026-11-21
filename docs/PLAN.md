@@ -72,7 +72,7 @@ The Ryzen desktop (Ryzen 7 on an AM5 board, Radeon RX 570, Windows) is the main 
 
 Later, with new hardware or a decision from you: RDMA links at 25 GbE, the NVIDIA direct NVMe-to-VRAM path, parity as an op, and `sievewarden`.
 
-The spec stays the technical source of truth. Its phases map onto these milestones: S0 is M1 and M2, B1 and B2 are M3 and M5, C1 and C2 are M4 and M5, A1 is M6, A2 is folded into M7, J1 and J2 are M9, and P is M10.
+The spec stays the technical source of truth. Its earlier phases map onto these milestones: S0 is M1 and M2, B1 and B2 are M3 and M5, C1 and C2 are M4 and M5, A1 is M6, A2 is folded into M7, J1 and J2 are M9, and P is M10. Since the 21 Nov 2026 reconcile pass the spec uses these milestone numbers directly.
 
 ## Working method
 
@@ -108,7 +108,7 @@ diagsteno. docs/SPEC.md and docs/PLAN.md are in paralanes.
 1. In each repo create: README.md (one paragraph, status "pre-alpha"),
    LICENSE files as chosen in docs/PLAN.md, a Cargo workspace or crate
    skeleton, CI that runs fmt, clippy and tests, and a CLAUDE.md.
-2. Each CLAUDE.md starts from the one in docs/SPEC.md and adds: the repo map
+2. Each CLAUDE.md starts from the one in paralanes and adds: the repo map
    from docs/PLAN.md, this repo's role, and the rule that agents never merge,
    tag or publish.
 3. Landscape check: for each of the three gaps (vendor-neutral GPU data ops,
@@ -135,7 +135,7 @@ that produced them, open questions for Evan, and requests for other agents.
 Open a pull request and stop. Do not merge, tag, publish or start M<n+1>.
 ```
 
-Lines to add to each repo's `CLAUDE.md` beyond the spec's version:
+Lines to add to each repo's `CLAUDE.md` beyond the umbrella version (done in the M0 scaffold):
 
 ```markdown
 ## Repo map

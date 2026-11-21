@@ -1,14 +1,16 @@
 # Atlas
 
-Published CPU-versus-GPU crossover measurements for `bytelanes` ops. Nothing
-has been measured yet; atlas v1 is milestone M5.
+Published measurements: CPU-versus-GPU crossover sizes for `bytelanes` ops
+(atlas v1, milestone M5) and `stagelanes` pipeline latency runs (M6).
+Nothing has been measured yet.
 
 ## Method (draft, finalised in M5)
 
-- Every figure comes from a run of the `bytelanes-bench` binary. No other
-  numbers appear here.
-- Each run writes one file, `runs/<machine>/<YYYY-MM-DD>-<op>.json`, which is
-  never edited after it is committed.
+- Every figure comes from a run of `bytelanes-bench` (ops) or
+  `stagelanes-bench` (pipeline). No other numbers appear here.
+- Each run writes one file, `runs/<machine>/<YYYY-MM-DD>-<op>.json` or
+  `runs/<machine>/<YYYY-MM-DD>-pipeline.json`, which is never edited after it
+  is committed.
 - Every run file records: machine, OS, kernel or build number, GPU driver
   version, wgpu backend (Vulkan, DX12 or Metal), Rust version and the exact
   command.

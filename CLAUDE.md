@@ -143,9 +143,10 @@ cargo test -p paralanes-chand            # Windows and macOS must pass
 cargo build -p paralanes-init --target x86_64-unknown-linux-musl   # agent A only
 ```
 
-Benchmark runs for the atlas use the `bytelanes` bench binary; write its output
-to `atlas/runs/<machine>/<YYYY-MM-DD>-<op>.json` and do not edit run files
-after they are committed.
+Op benchmark runs for the atlas use `bytelanes-bench`; write its output to
+`atlas/runs/<machine>/<YYYY-MM-DD>-<op>.json`. Pipeline runs use
+`stagelanes-bench` and write `atlas/runs/<machine>/<YYYY-MM-DD>-pipeline.json`.
+Do not edit run files after they are committed.
 
 ## Open decisions (TBD)
 
