@@ -9,7 +9,8 @@ This repo holds the spec, the build plan, the measurements atlas, the network
 join between machines, and the appliance image. The libraries live in sibling
 repos (see Repo map).
 
-Read `docs/PLAN.md` and `docs/SPEC.md` before any change. The plan sets
+Read `docs/PLAN.md` and `docs/SPEC.md` before any change, and
+`docs/machines.md` for the hardware. The plan sets
 milestone order and which machine does what. The spec is the technical source
 of truth. Where they disagree, the plan is current; note the conflict in your
 status file.
@@ -36,6 +37,7 @@ paralanes/
   CLAUDE.md
   docs/
     SPEC.md            technical spec
+    machines.md        hardware inventory per machine
     PLAN.md            milestones, machines, gates
     landscape.md       M0 check of existing projects (go / no-go per repo)
     status/M<n>.md     one status file per milestone, all repos
@@ -66,7 +68,7 @@ so.
 | Agent | Machine | OS | Role in this repo |
 | --- | --- | --- | --- |
 | A | Dell PowerEdge, 2x Xeon Silver (10 cores each), no GPU | Linux guest on Proxmox, cores pinned, both NUMA nodes exposed | Runs the scheduler and drives M9 tests; builds the appliance image (M10) |
-| B | Desktop, Ryzen 7 (model TBD) on AM5, Radeon RX 570 (4 or 8 GB, TBD) | Windows | Runs `paralanes-chand`; contributes atlas runs. Record which wgpu backend is used (Vulkan or DX12) |
+| B | Desktop, Ryzen 7 5700X (8 cores, AM4 Mini-ITX), Radeon RX 7800 XT 16 GB on PCIe 3.0 x16, 1 GbE | Windows | Runs `paralanes-chand`; contributes atlas runs. Record which wgpu backend is used (Vulkan or DX12) |
 | C | MacBook Pro, M5 Pro, 24 GB unified memory | macOS, AArch64 | Runs `paralanes-chand`; contributes atlas runs. Benchmark plugged in, lid open, power mode recorded |
 
 `paralanes-chand` must build and pass its tests on Windows and macOS.
@@ -84,11 +86,16 @@ so.
 - **No unmeasured numbers.** A performance figure appears in a README, the
   atlas or a status file only with the run file that produced it. Every run
   file records machine, OS, kernel or build number, GPU driver version, wgpu
-  backend, Rust version and the exact command.
+  backend, GPU host link (PCIe generation and width, or unified memory),
+  network link type and speed for runs across machines, Rust version and the
+  exact command.
 - **A negative result is a result.** If the GPU loses to the CPU at every
   size, or topology-aware placement shows no gain, publish that plainly.
 - **Results crossing the network are verified.** Every result returned by
   `paralanes-chand` carries a CRC that the receiver checks.
+- **Measure, don't hard-code.** Thresholds, placement and link costs come
+  from atlas run files and live measurements, never constants in code, so
+  new hardware is used without code changes (spec R9).
 - **Channel programs are idempotent.** The scheduler may resubmit once on
   another path after a failure; zero lost and zero duplicated completions is
   the M9 gate.
@@ -151,5 +158,5 @@ Do not edit run files after they are committed.
 ## Open decisions (TBD)
 
 - GitHub owner for the four repos
-- Ryzen 7 model and RX 570 memory size, for the atlas
-- Link speed between machines; MacBook tested both wired and on Wi-Fi
+- Remaining hardware details in `docs/machines.md`: Dell CPU models, memory and
+  network; MacBook network; the switch

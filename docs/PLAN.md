@@ -55,7 +55,7 @@ Eleven milestones, each one Claude Code session on one machine, ending at a gate
 | M0 | Claim names, set up repos, landscape check | All | You, then any agent | Four repos exist with licence, `CLAUDE.md`, the spec and this plan; a short written check of existing projects for each gap, with a go or no-go per repo | Nothing |
 | M1 | Contract and CPU reference: op format, Checksum, Filter, Decrypt on CPU, golden vectors | `bytelanes` | Dell, agent A | Tests pass; miri clean; `vectors/` committed; version 0.0.1 published to hold the crate name | Nothing |
 | M2 | Rings, pinned memory, topology detection, on Windows and Linux | `stagelanes` | Ryzen, agent B builds; Dell, agent A checks Linux and two sockets | Loom and miri clean; a `stagelanes topology` command prints the correct sockets, cache sizes and core classes on all three machines; 0.0.1 published | M4 |
-| M3 | GPU ops on Windows with the Radeon RX 570 | `bytelanes` | Ryzen, agent B | Reproduces `vectors/` exactly plus 10,000 property-test cases per op | M4 |
+| M3 | GPU ops on Windows with the Radeon RX 7800 XT | `bytelanes` | Ryzen, agent B | Reproduces `vectors/` exactly plus 10,000 property-test cases per op | M4 |
 | M4 | GPU ops on Metal, plus a unified-memory buffer strategy | `bytelanes` | MacBook, agent C | Reproduces `vectors/` natively on AArch64; zero-copy result or a documented reason it is not possible in current wgpu | M2, M3 |
 | M5 | Atlas v1: crossover size per op per machine, with method and raw data | `paralanes` | Ryzen and MacBook, agents B and C | Every number traces to a logged `bytelanes` benchmark run. **Release 1: `bytelanes` 0.1 and the atlas** | Nothing on the Ryzen |
 | M6 | Stage pipeline: stages placed by topology, batched handoff | `stagelanes` | Ryzen, agent B builds and measures on bare metal; Dell, agent A repeats on two sockets | On a synthetic workload, p99 latency at 90% core load is at most 3x p99 at 50% on the Ryzen; the Dell run records the gain or loss from keeping each stage's memory on its own socket. **Release 2: `stagelanes` 0.1** | M4 |
@@ -64,13 +64,13 @@ Eleven milestones, each one Claude Code session on one machine, ending at a gate
 | M9 | Join and failover: channel daemon on both GPU machines, network backend, scheduler | `paralanes` | All three | The Dell completes work on both GPU machines; unplug one and work moves to the other; unplug both and it moves to the CPU; zero lost, zero duplicated | M8 |
 | M10 | Appliance image: Rust PID 1, minimal kernel, unified kernel image | `paralanes` | Dell, agent A | Boots in QEMU and runs `diagsteno` | Nothing |
 
-The Ryzen desktop (Ryzen 7 on an AM5 board, Radeon RX 570, Windows) is the main machine for `stagelanes` because it runs on bare metal, which gives cleaner latency numbers than the Dell's Proxmox guest. Three limits come with it:
+The Ryzen desktop (Ryzen 7 5700X on an AM4 Mini-ITX board, Radeon RX 7800 XT 16 GB on PCIe 3.0 x16, Windows; details in `docs/machines.md`) is the main machine for `stagelanes` because it runs on bare metal, which gives cleaner latency numbers than the Dell's Proxmox guest. Three limits come with it:
 
 - **Windows.** `stagelanes` needs Windows versions of core pinning, large pages and topology detection, and Windows cannot fully fence cores off from the operating system, so p99 figures will be noisier than on tuned Linux.
 - **Eight identical cores, one socket.** The Ryzen can prove the pipeline and its latency behaviour, but not placement by core type. The Dell covers placement by socket. No machine in the set has mixed cache-heavy and frequency-heavy cores, so that claim stays untested until one does.
 - **One machine, two jobs.** GPU benchmarks (M3, M5) and pipeline benchmarks (M2, M6) must not run at the same time on the Ryzen.
 
-Later, with new hardware or a decision from you: RDMA links at 25 GbE, the NVIDIA direct NVMe-to-VRAM path, parity as an op, and `sievewarden`.
+Later, with new hardware or a decision from you: faster links between machines (25 GbE, RDMA or similar), the NVIDIA direct NVMe-to-VRAM path, parity as an op, and `sievewarden`. Faster networking is not near-term but stays a test variable: the scheduler places work by measured link cost, and the M9 tests are re-run unchanged when a faster link arrives. New components are measured and used as they appear, without code changes (spec R9).
 
 The spec stays the technical source of truth. Its earlier phases map onto these milestones: S0 is M1 and M2, B1 and B2 are M3 and M5, C1 and C2 are M4 and M5, A1 is M6, A2 is folded into M7, J1 and J2 are M9, and P is M10. Since the 21 Nov 2026 reconcile pass the spec uses these milestone numbers directly.
 
@@ -162,7 +162,7 @@ Decisions needed before M0:
 
 - [ ] Which GitHub owner holds the repos: your personal account or an organisation?
 - [x] Licence. Rust libraries are commonly dual-licensed MIT and Apache-2.0, which suits `bytelanes` and `stagelanes`. Pick the same or a copyleft licence for `diagsteno`. **Decided 21 Nov 2026:** Apache-2.0 for `bytelanes` and `stagelanes` (building-block libraries); GPL-3.0-only for `diagsteno` (end-user application) and `paralanes` (depends on `diagsteno`; GPL-3's installation-information clause covers the appliance image).
-- [ ] Which Ryzen 7 model is in the desktop, and does the RX 570 have 4 GB or 8 GB? Both go in the atlas with every figure.
+- [x] Which Ryzen 7 model is in the desktop, and does the RX 570 have 4 GB or 8 GB? Both go in the atlas with every figure. **Answered 21 Nov 2026:** Ryzen 7 5700X, and the GPU is a Radeon RX 7800 XT 16 GB, not an RX 570. Full details in `docs/machines.md`.
 - [ ] For M7: target channel count, sample rate and sensor types for the synthetic strain and vibration data.
 - [ ] For M7: storage format. Parquet files are the suggested default, because existing tools read them.
 
@@ -173,8 +173,8 @@ Risks:
 | Four repos is a lot for one person's spare time | Work stalls with nothing published | Releases are front-loaded: `bytelanes` and the atlas ship after M5, before the larger pieces start |
 | A gap turns out to be filled already | Effort duplicates an existing project | M0 landscape check with a go or no-go per repo, before any code |
 | A name is taken between today and M0 | Rename and rework | Create the repos and publish 0.0.1 crates in M0 and M1 |
-| The RX 570 is a 2017 card and the Ryzen 7 has fast built-in AES and CRC instructions | The GPU may lose to the CPU on checksum and decrypt at every input size | That is a valid atlas result and is published as such; FFT and filter over large batches are the likelier GPU wins |
-| The RX 570 is on AMD's reduced-support driver branch | A driver bug may not get fixed | Record the driver version with every run; the MacBook is the second GPU check |
+| The Ryzen 7 5700X has fast built-in AES and CRC instructions, and the A520 board runs the GPU at PCIe 3.0 | The GPU may lose to the CPU on checksum and decrypt at every input size | That is a valid atlas result and is published as such; FFT and filter over large batches are the likelier GPU wins; record the PCIe link with every run |
+| The join runs over 1 GbE | For most ops the Dell's own CPU beats a remote GPU, so M9 shows little offload | M9 is a correctness and failover gate; placement uses measured link cost; re-run M9 when faster links arrive |
 | Windows adds latency noise | The M6 gate is harder to pass than on tuned Linux | Measure on a quiet system and report the distribution, not one number; the Dell repeats the run on Linux |
 | No machine has mixed core types | `stagelanes` cannot prove placement by core type | State this in the README; prove placement by socket on the Dell; revisit when such a CPU is available |
 | `diagsteno` overlaps general time-series databases | It looks like one more database | Position it as an edge ingest and feature engine that exports to them, which M8's export gate enforces |

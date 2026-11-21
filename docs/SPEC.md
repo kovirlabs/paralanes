@@ -44,13 +44,13 @@ Each machine proves one part of the design alone; a network backend then joins t
 
 | Aspect | Dell server (agent A) | Ryzen desktop (agent B) | MacBook Pro (agent C) |
 | --- | --- | --- | --- |
-| Hardware | Two Xeon Silver CPUs, 10 cores each; no GPU | Ryzen 7 (model TBD) on an AM5 board, one Radeon RX 570 (4 or 8 GB, TBD) | Apple M5 Pro, 24 GB unified memory |
+| Hardware | Two Xeon Silver CPUs, 10 cores each; no GPU | Ryzen 7 5700X (8 cores, one shared L3) on an AM4 Mini-ITX board; Radeon RX 7800 XT, 16 GB, on a PCIe 3.0 x16 link; 1 GbE | Apple M5 Pro, 24 GB unified memory |
 | Target | x86-64 Linux guest on Proxmox | x86-64 Windows | AArch64 macOS |
 | Role | Op format and CPU reference (M1); two-socket check of `stagelanes` (M2, M6); `diagsteno` (M7, M8); scheduler and test driver for the join (M9); appliance image (M10) | Main `stagelanes` machine on bare metal (M2, M6); discrete-GPU channel processor through Vulkan or DX12 (M3, M5) | Unified-memory channel processor through Metal (M4, M5) |
 | Proves alone | Placement by socket: the gain or loss from keeping each stage's memory on its own socket; durability (R8) | Latency holds at 90% core load (R2); GPU output equals the CPU reference (R7); the input size where the GPU starts to win | A native AArch64 run (R4); R7 on a second GPU vendor; what the ops cost when the copy to the GPU disappears |
 | Proves joined | Schedules work across two GPU paths; fails over between them and then to the CPU (R3) | Serves channel programs to the Dell | Serves channel programs to the Dell |
 
-No machine in the set has mixed cache-heavy and frequency-heavy cores, so placement by core type stays untested until one does. On the Ryzen, GPU benchmarks (M3, M5) and pipeline benchmarks (M2, M6) must not run at the same time.
+Full hardware details are in [`docs/machines.md`](machines.md). No machine in the set has mixed cache-heavy and frequency-heavy cores, so placement by core type stays untested until one does. On the Ryzen, GPU benchmarks (M3, M5) and pipeline benchmarks (M2, M6) must not run at the same time.
 
 ### The assembly line
 
@@ -78,6 +78,17 @@ Each machine runs its own Claude Code agent. Each repo's `CLAUDE.md` holds the w
 - **Rebase at every session start**, then read every file in `docs/status/`.
 - **Parallel sessions touch different repos or different machines.** The plan's milestone table says which pairs are safe.
 
+### Adapting to new hardware
+
+The machines will change: faster links between them, more GPUs, a board with PCIe 4.0, a CPU with mixed core types. The design treats hardware as a variable to measure, not a constant to code against, so new components are used as they appear.
+
+1. **Inventory, then measure.** Each machine's hardware is recorded in `docs/machines.md`. `stagelanes topology` reports the CPU side; `paralanes-chand` reports its GPU, device memory, wgpu backend, memory model (discrete or unified) and host link when it joins.
+2. **No hard-coded thresholds.** The CPU fallback size is per op, per machine and per path, taken from atlas run files, never a constant in code. A new GPU or a new link means new benchmark runs, not a code change.
+3. **The scheduler measures links.** `paralanes-sched` measures bandwidth and round-trip time to each `paralanes-chand` when it joins and while it runs, and places work by estimated total cost (transfer both ways plus compute) against running locally. Over 1 GbE a remote GPU wins only on work with a high compute-to-byte ratio; on a faster link the same code sends more work out.
+4. **Transports are pluggable.** `paralanes-net` hides the link behind a `Transport` trait. TCP comes first and needs no change for a faster Ethernet link; RDMA or other transports arrive as further implementations.
+5. **Link speed is a recorded variable.** Every run that crosses machines records the link type and speed at each end. The M9 tests are written so they can be re-run unchanged when a faster link arrives, giving a direct comparison.
+6. **More devices fit the same traits.** A second GPU in a box is another `ChannelBackend` path; a new GPU vendor is a new backend; a CPU with mixed core types shows up as core classes in `stagelanes-arch`.
+
 ## Requirements and non-goals
 
 The numbers below are proposed targets, not measurements.
@@ -92,6 +103,7 @@ The numbers below are proposed targets, not measurements.
 | R6 | GPU vendor is swappable | One `ChannelBackend` trait; a wgpu backend (Vulkan, DX12, Metal) and the CPU reference backend. A CUDA backend is deferred |
 | R7 | GPU results are trustworthy | Every op has a CPU reference; GPU output matches it byte for byte on `vectors/` and in 10,000 property-test cases per op |
 | R8 | Durability does not depend on a GPU | A record is acknowledged only after `diagsteno-store` has flushed it; a kill-and-restart test loses no acknowledged record; data leaving a GPU is checksum-verified |
+| R9 | New hardware is used without code changes | Changing a GPU, adding one, or changing a link between machines needs only new benchmark runs: placement and CPU fallback come from measured values; M9 runs record link type and speed and can be re-run unchanged |
 
 Non-goals:
 
@@ -122,8 +134,8 @@ Non-goals:
 | `diagsteno` | diagsteno | lib, bin | Ingest, band features, anomaly scoring, HTTP query API, export to a time-series database | M7, M8 | no |
 | `diagsteno-store` | diagsteno | lib | Storage of samples and features with flush-before-acknowledge; format TBD, Parquet suggested | M7 | no |
 | `paralanes-chand` | paralanes | bin | Channel daemon on a GPU machine: receives programs, runs them on the local backend, returns results with a CRC | M9 | no |
-| `paralanes-net` | paralanes | lib | Backend that submits channel programs to a `paralanes-chand` through a `Transport` trait: TCP first, RDMA later | M9 | no |
-| `paralanes-sched` | paralanes | lib | Scheduler: batching, placement across GPU paths, CPU fallback below the crossover size, path health and failover | M9 | no |
+| `paralanes-net` | paralanes | lib | Backend that submits channel programs to a `paralanes-chand` through a `Transport` trait: TCP first, faster transports such as RDMA later | M9 | no |
+| `paralanes-sched` | paralanes | lib | Scheduler: batching, placement across GPU paths by measured cost, link measurement, CPU fallback below the crossover size, path health and failover | M9 | no |
 | `paralanes-init`, `image/` | paralanes | bin, build scripts | PID 1 and the appliance image; Linux only | M10 | syscall wrappers only |
 | CUDA backend | deferred | lib | Direct NVMe-to-VRAM path; needs NVIDIA hardware | later | FFI only |
 
@@ -194,7 +206,7 @@ Rules the scheduler enforces:
 
 1. A whole program runs on one GPU; only the final `dst` may be `Host`.
 2. Programs are batched per GPU up to a time or size limit, then dispatched together.
-3. Work below the crossover size published in the atlas runs on the CPU reference backend, because a GPU round trip costs more than it saves on small inputs.
+3. Work is placed by estimated cost from measured values: the atlas crossover per op and path, plus measured bandwidth and round-trip time for remote paths. Work below the crossover runs on the CPU reference backend, because a GPU round trip costs more than it saves on small inputs.
 4. A program whose GPU goes `Offline` is resubmitted once on another path; programs are idempotent by construction, so a retry is safe.
 5. Every `Host` result carries a CRC computed on the GPU and verified on the receiving core.
 
@@ -207,15 +219,15 @@ Rules the scheduler enforces:
 | M0 | Setup and landscape check | Four repos with licence, `CLAUDE.md`, CI; `docs/landscape.md` with a go or no-go per repo |
 | M1 | `bytelanes` op format and CPU reference: Checksum, Filter, Decrypt; golden vectors | Unit and property tests pass; miri clean on `bytelanes-abi` and `bytelanes`; `vectors/` committed with a replay test |
 | M2 | `stagelanes` rings, pinned memory, topology detection | Rings pass loom and miri; `stagelanes topology` prints the correct sockets, cache sizes and core classes on all three machines |
-| M3 | GPU ops on the RX 570 | Reproduces `vectors/` exactly plus 10,000 property-test cases per op; the wgpu backend used (Vulkan or DX12) is recorded |
+| M3 | GPU ops on the RX 7800 XT | Reproduces `vectors/` exactly plus 10,000 property-test cases per op; the wgpu backend used (Vulkan or DX12), driver version and PCIe link are recorded |
 | M4 | GPU ops on Metal and a unified-memory `BufferStrategy` | Reproduces `vectors/` natively on AArch64; copy versus no-copy cost measured. If current wgpu offers no zero-copy route, the status file says so with the evidence, and the gate still passes |
 | M5 | Atlas v1 | Crossover size per op per machine in `atlas/crossover.md`, each traced to a `bytelanes-bench` run file |
 | M6 | Stage pipeline | R2 passes on the Ryzen; a test allocator and lock counter show zero allocations and zero locks on stage cores after startup; a single-core baseline is measured for comparison; the Dell run records the gain or loss from socket-local memory |
 | M7 | `diagsteno` ingest and features; FFT op in `bytelanes` | A recorded synthetic dataset replays with features equal to the CPU reference; ingest holds the target channel count and sample rate with no dropped samples; R8 passes |
 | M8 | `diagsteno` scoring and query | Injected faults are flagged; queries return stored features; export to a time-series database works |
-| M9 | Join and failover | Work completes on both GPU machines with every result passing its CRC check; R3 passes. The MacBook is tested on wired Ethernet and on Wi-Fi, recorded separately |
+| M9 | Join and failover | Work completes on both GPU machines with every result passing its CRC check; R3 passes. Every run records link type and speed; the MacBook is tested on wired Ethernet and on Wi-Fi, recorded separately |
 | M10 | Appliance image | Boots in QEMU and runs `diagsteno`; R5 passes |
-| Later | New hardware | Direct NVMe-to-VRAM path on NVIDIA, several GPUs in one box, RDMA links at 25 or 100 GbE, the `Score` op. Defined when started |
+| Later | New hardware | Faster links between machines (25 GbE, RDMA or similar), re-running the M9 tests unchanged with link speed as the variable; a PCIe 4.0 board for the Ryzen's GPU; several GPUs in one box; the direct NVMe-to-VRAM path on NVIDIA; the `Score` op. Defined when started |
 
 The Dell runs Proxmox, so agent A works in a Linux guest with the host CPU type, cores pinned one-to-one, both NUMA nodes exposed and large-page backing, with other guests stopped during benchmarks. On shared cores a latency result means nothing. R8 testing needs a drive passed through to the guest.
 
@@ -229,8 +241,7 @@ Each repo has its own `CLAUDE.md` with its crates, milestones, agents and rules.
 
 Decisions needed:
 
-- [ ] Is faster networking between nodes in scope? If so, 25 GbE cards with RDMA support are the smallest step that changes the M9 result.
-- [ ] Hardware details for the atlas: Ryzen 7 model and RX 570 memory size.
+- [ ] Remaining hardware details in `docs/machines.md`: Dell CPU models, memory and network; MacBook network; the switch.
 - [ ] For M7: channel count, sample rate and sensor types for the synthetic data; storage format.
 
 Decided on 21 Nov 2026:
@@ -242,13 +253,16 @@ Decided on 21 Nov 2026:
 - The Ryzen runs Windows; `stagelanes`, `bytelanes-wgpu` and `paralanes-chand` must build and test there.
 - The MacBook is tested on both wired Ethernet and Wi-Fi; M9 records each separately.
 - Licences: Apache-2.0 for `bytelanes` and `stagelanes`; GPL-3.0-only for `diagsteno` and `paralanes`.
+- The Ryzen desktop is a Ryzen 7 5700X with a Radeon RX 7800 XT 16 GB (details in `docs/machines.md`).
+- Faster networking between machines is not near-term. It stays in the design as a test variable: the scheduler places work by measured link cost and the M9 tests are re-run when faster links arrive.
+- The system adapts to the hardware present rather than to fixed values (see [Adapting to new hardware](#adapting-to-new-hardware)).
 
 Risks:
 
 | Risk | Effect | Mitigation |
 | --- | --- | --- |
 | Three agents across four repos | A drifting contract; M9 fails on integration | One contract in `bytelanes-abi`, frozen after M1; contract changes pass on all three machines; golden vectors; per-milestone status files; Evan as the only merger |
-| The join runs over the network, not PCIe | M9 proves the design end to end but its throughput says little about a single-box build | Report M9 as a correctness and failover result; take performance claims from M5 and M6 separately |
+| The join runs over 1 GbE, not PCIe | M9 proves the design end to end, but for most ops the Dell's own CPU will beat a GPU on the other side of a 1 GbE link | Report M9 as a correctness and failover result; take performance claims from M5 and M6; place work by measured cost; re-run M9 unchanged when a faster link arrives |
 | Current wgpu may not expose zero-copy buffers on Metal | M4 cannot show the unified-memory gain | M4 gate accepts a documented negative result; a Metal-native strategy can follow as a contract change |
 | The MacBook is a laptop | Thermal throttling, sleep and battery mode make benchmarks noisy; it may be absent during M9 | Benchmark plugged in, lid open, power mode recorded; the scheduler treats an absent Mac as a failed path, which is itself the R3 test |
 | 24 GB is shared by CPU and GPU on the Mac | Large buffer pools starve the system | Cap pools in `stagelanes-mem`; record pool size with each run |
@@ -257,7 +271,8 @@ Risks:
 | Stage handoffs cost a cache miss each | The pipeline is slower than one core doing everything | Few stages, batched handoffs, pointers only; M6 compares against a single-core baseline |
 | Two sockets on the Dell | Cross-socket memory access erases the gain | Partition memory per socket; `stagelanes-bench` reports remote-memory access counts |
 | GPU round trip is slower than the CPU for small inputs | Latency gets worse, not better | M5 measures the crossover; the scheduler falls back to the CPU below it |
-| The RX 570 is a 2017 card on AMD's reduced-support driver branch, and the Ryzen has fast CRC and AES instructions | The GPU may lose on checksum and decrypt at every size; a driver bug may not get fixed | A loss is a valid atlas result; record the driver version with every run; the MacBook is the second GPU check |
+| The Ryzen has fast AES and CRC instructions, and its GPU sits on a PCIe 3.0 link | The GPU may lose to the CPU on checksum and decrypt at every input size, because moving the data costs more than computing on it | A loss is a valid atlas result; FFT and filter over large batches are the likelier GPU wins; record driver version and PCIe link with every run; the MacBook is the second GPU check |
+| The Ryzen's Mini-ITX board has one PCIe slot, used by the GPU | A faster network card needs the M.2 slot through an adapter or a different board | Network upgrades start on the other machines or with a board change; tracked in `docs/machines.md` |
 | Consumer GPUs have no ECC memory | Silent corruption in results | CRC on every result leaving the GPU (scheduler rule 5) |
 | The Dell's 1U chassis limits GPU options | A later single-box build may need different hardware | Check riser and power specifications before buying a GPU for it |
 
@@ -274,6 +289,8 @@ The spec was drafted for a single workspace with a ledger demo and three track b
 7. **Agent workflow.** Track branches (`track-a/b/c`), per-track ownership and `docs/status/<track>.md` are replaced by milestone branches (`m<n>-topic`) and `docs/status/M<n>.md`. `docs/bench/<track>.md` is replaced by the atlas run files.
 8. **Embedded `CLAUDE.md` and S0 prompt removed.** Each repo now has its own `CLAUDE.md`, and the prompts live in `docs/PLAN.md`.
 9. **Smaller fixes.** Hugepages became large pages, since Windows uses that term. The `ChannelBackend` list names the wgpu backends and defers CUDA. The scheduler's CPU fallback uses the crossover size from the atlas. The settled ledger-versus-real-workload question moved to Decided.
+
+10. **Hardware and adaptability (later on 21 Nov 2026).** The Ryzen desktop is a Ryzen 7 5700X with a Radeon RX 7800 XT, not an AM5 board with an RX 570; hardware details moved to `docs/machines.md`. Added [Adapting to new hardware](#adapting-to-new-hardware) and R9: placement and CPU fallback come from measured values, and link speed is a recorded test variable. Faster networking is deferred, not dropped.
 
 ## Sources
 

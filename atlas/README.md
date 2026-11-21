@@ -12,8 +12,11 @@ Nothing has been measured yet.
   `runs/<machine>/<YYYY-MM-DD>-pipeline.json`, which is never edited after it
   is committed.
 - Every run file records: machine, OS, kernel or build number, GPU driver
-  version, wgpu backend (Vulkan, DX12 or Metal), Rust version and the exact
-  command.
+  version, wgpu backend (Vulkan, DX12 or Metal), GPU host link (PCIe
+  generation and width, or unified memory), network link type and speed for
+  runs across machines, Rust version and the exact command.
+- When hardware changes, the affected runs are repeated and added as new
+  files; old runs stay as the record of the old hardware.
 - MacBook runs: plugged in, lid open, power mode recorded.
 - Ryzen runs: no `stagelanes` pipeline benchmark running at the same time.
 - A result where the GPU loses at every size is published as such.
