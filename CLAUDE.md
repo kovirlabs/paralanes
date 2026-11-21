@@ -158,8 +158,8 @@ Do not edit run files after they are committed.
 ## Open decisions (TBD)
 
 - GitHub owner for the four repos
-- Remaining hardware details in `docs/machines.md`: drives and cache mode
-  behind the Dell's RAID controller; whether a riser is fitted; MacBook
-  network; the switch
+- Remaining hardware details in `docs/machines.md`: whether the Dell has a
+  free PCIe slot; MacBook network; the switch
+- Storage for agent A's guest: a ZFS volume on the SSD pool, or a dedicated disk
 - Whether M9 runs over a dedicated link on the Dell's spare port `eno2`
 - Size of agent A's Proxmox guest (spec assumes 20 cores, 10 per socket)

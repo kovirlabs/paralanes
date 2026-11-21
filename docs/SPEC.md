@@ -229,7 +229,7 @@ Rules the scheduler enforces:
 | M10 | Appliance image | Boots in QEMU and runs `diagsteno`; R5 passes |
 | Later | New hardware | Faster links between machines (25 GbE, RDMA or similar), re-running the M9 tests unchanged with link speed as the variable; a PCIe 4.0 board for the Ryzen's GPU; several GPUs in one box; the direct NVMe-to-VRAM path on NVIDIA; the `Score` op. Defined when started |
 
-The Dell runs Proxmox, so agent A works in a Linux guest with the host CPU type, cores pinned one-to-one, both NUMA nodes exposed and large-page backing, with other guests stopped during benchmarks. On shared cores a latency result means nothing. R8 testing needs a disk or volume passed through to the guest. The Dell has no NVMe: storage sits behind a MegaRAID SAS-3 3108 controller, whose write-cache mode is recorded with every durability run.
+The Dell runs Proxmox, so agent A works in a Linux guest with the host CPU type, cores pinned one-to-one, both NUMA nodes exposed and large-page backing, with other guests stopped during benchmarks. On shared cores a latency result means nothing. R8 testing needs a disk or volume for the guest. The Dell has no NVMe: its storage is four consumer SATA SSDs (WD Blue SA510, no power-loss protection) in a ZFS pool behind a PERC H730P. R8 is therefore proven for a process crash, not a power cut, and every durability run records the storage stack, the ZFS `sync` setting and the drive write cache.
 
 If a step needs another machine, the agent writes the code and tests, marks them `#[ignore = "needs: <machine>"]`, notes it in the status file and continues.
 
@@ -241,7 +241,8 @@ Each repo has its own `CLAUDE.md` with its crates, milestones, agents and rules.
 
 Decisions needed:
 
-- [ ] Remaining hardware details in `docs/machines.md`: drives and cache mode behind the Dell's RAID controller; whether a riser is fitted; MacBook network; the switch.
+- [ ] Remaining hardware details in `docs/machines.md`: whether the Dell has a free PCIe slot; MacBook network; the switch.
+- [ ] Storage for agent A's guest: a ZFS volume on the existing SSD pool (simplest), or a dedicated disk.
 - [ ] Whether M9 runs over a dedicated link on the Dell's spare port `eno2`.
 - [ ] Size of agent A's Proxmox guest (the spec assumes 20 cores, 10 per socket).
 - [ ] For M7: channel count, sample rate and sensor types for the synthetic data; storage format.
