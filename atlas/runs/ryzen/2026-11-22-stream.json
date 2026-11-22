@@ -1,0 +1,904 @@
+{
+  "audit": [
+    {
+      "batches": 16,
+      "engines": {
+        "cpu-16t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 2109375000,
+          "cpu_work_ns_per_transaction": 28.97075443628347,
+          "input_gb_per_s_at_p50": 0.5834498108168261,
+          "rep_ns": {
+            "max": 975500,
+            "min": 855800,
+            "p50": 898600,
+            "p90": 918100
+          },
+          "reps": 1111,
+          "transactions_per_s_at_p50": 72931226.35210326
+        },
+        "cpu-1t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 968750000,
+          "cpu_work_ns_per_transaction": 4.331072928302629,
+          "input_gb_per_s_at_p50": 1.8697860199714693,
+          "rep_ns": {
+            "max": 858000,
+            "min": 221200,
+            "p50": 280400,
+            "p90": 297500
+          },
+          "reps": 3413,
+          "transactions_per_s_at_p50": 233723252.49643368
+        },
+        "cpu-8t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 2171875000,
+          "cpu_work_ns_per_transaction": 16.16594268054497,
+          "input_gb_per_s_at_p50": 1.076787841445882,
+          "rep_ns": {
+            "max": 768000,
+            "min": 460600,
+            "p50": 486900,
+            "p90": 499700
+          },
+          "reps": 2050,
+          "transactions_per_s_at_p50": 134598480.18073526
+        },
+        "dx12-overlap": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1812500000,
+          "cpu_work_ns_per_transaction": 79.47285970052083,
+          "input_gb_per_s_at_p50": 0.08163809345852603,
+          "rep_ns": {
+            "max": 6757500,
+            "min": 6380300,
+            "p50": 6422100,
+            "p90": 6509400
+          },
+          "reps": 156,
+          "transactions_per_s_at_p50": 10204761.682315754
+        },
+        "dx12-serial": {
+          "cpu_caller_waiting_ns": 984375000,
+          "cpu_process_ns": 1703125000,
+          "cpu_work_ns_per_transaction": 87.738037109375,
+          "input_gb_per_s_at_p50": 0.06523429140226453,
+          "rep_ns": {
+            "max": 8235700,
+            "min": 7971200,
+            "p50": 8037000,
+            "p90": 8121500
+          },
+          "reps": 125,
+          "transactions_per_s_at_p50": 8154286.425283065
+        },
+        "vulkan-overlap": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1625000000,
+          "cpu_work_ns_per_transaction": 70.97957698443464,
+          "input_gb_per_s_at_p50": 0.0691116647552761,
+          "rep_ns": {
+            "max": 8093800,
+            "min": 7526700,
+            "p50": 7586100,
+            "p90": 7965700
+          },
+          "reps": 131,
+          "transactions_per_s_at_p50": 8638958.094409512
+        },
+        "vulkan-serial": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1671875000,
+          "cpu_work_ns_per_transaction": 87.07461149796195,
+          "input_gb_per_s_at_p50": 0.060028394779024496,
+          "rep_ns": {
+            "max": 8944700,
+            "min": 8658000,
+            "p50": 8734000,
+            "p90": 8830500
+          },
+          "reps": 115,
+          "transactions_per_s_at_p50": 7503549.347378062
+        }
+      },
+      "transactions_per_batch": 4096
+    },
+    {
+      "batches": 16,
+      "engines": {
+        "cpu-16t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 2593750000,
+          "cpu_work_ns_per_transaction": 8.986713017906307,
+          "input_gb_per_s_at_p50": 2.318063446446336,
+          "rep_ns": {
+            "max": 1009100,
+            "min": 852000,
+            "p50": 904700,
+            "p90": 936800
+          },
+          "reps": 1101,
+          "transactions_per_s_at_p50": 289757930.805792
+        },
+        "cpu-1t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 968750000,
+          "cpu_work_ns_per_transaction": 2.864719361297844,
+          "input_gb_per_s_at_p50": 2.6732339069471,
+          "rep_ns": {
+            "max": 894200,
+            "min": 639200,
+            "p50": 784500,
+            "p90": 802600
+          },
+          "reps": 1290,
+          "transactions_per_s_at_p50": 334154238.36838746
+        },
+        "cpu-8t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 3156250000,
+          "cpu_work_ns_per_transaction": 6.343592331205957,
+          "input_gb_per_s_at_p50": 4.002962397404085,
+          "rep_ns": {
+            "max": 694000,
+            "min": 465800,
+            "p50": 523900,
+            "p90": 555900
+          },
+          "reps": 1898,
+          "transactions_per_s_at_p50": 500370299.6755106
+        },
+        "dx12-overlap": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1843750000,
+          "cpu_work_ns_per_transaction": 24.75885244516226,
+          "input_gb_per_s_at_p50": 0.27443526963895465,
+          "rep_ns": {
+            "max": 8235500,
+            "min": 7509300,
+            "p50": 7641700,
+            "p90": 8040400
+          },
+          "reps": 130,
+          "transactions_per_s_at_p50": 34304408.70486933
+        },
+        "dx12-serial": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1687500000,
+          "cpu_work_ns_per_transaction": 25.217349712665264,
+          "input_gb_per_s_at_p50": 0.2162190696139888,
+          "rep_ns": {
+            "max": 9852700,
+            "min": 9629300,
+            "p50": 9699200,
+            "p90": 9751500
+          },
+          "reps": 104,
+          "transactions_per_s_at_p50": 27027383.7017486
+        },
+        "vulkan-overlap": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1546875000,
+          "cpu_work_ns_per_transaction": 19.496846421856745,
+          "input_gb_per_s_at_p50": 0.22519753020134228,
+          "rep_ns": {
+            "max": 10052800,
+            "min": 9177300,
+            "p50": 9312500,
+            "p90": 9790800
+          },
+          "reps": 107,
+          "transactions_per_s_at_p50": 28149691.275167786
+        },
+        "vulkan-serial": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1593750000,
+          "cpu_work_ns_per_transaction": 23.35027321097777,
+          "input_gb_per_s_at_p50": 0.2047580086115152,
+          "rep_ns": {
+            "max": 10871100,
+            "min": 10132100,
+            "p50": 10242100,
+            "p90": 10636800
+          },
+          "reps": 97,
+          "transactions_per_s_at_p50": 25594751.0764394
+        }
+      },
+      "transactions_per_batch": 16384
+    },
+    {
+      "batches": 16,
+      "engines": {
+        "cpu-16t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 4156250000,
+          "cpu_work_ns_per_transaction": 3.893623651830527,
+          "input_gb_per_s_at_p50": 8.694660033167496,
+          "rep_ns": {
+            "max": 1457600,
+            "min": 879900,
+            "p50": 964800,
+            "p90": 1076900
+          },
+          "reps": 1018,
+          "transactions_per_s_at_p50": 1086832504.145937
+        },
+        "cpu-1t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 984375000,
+          "cpu_work_ns_per_transaction": 4.693865776062012,
+          "input_gb_per_s_at_p50": 1.6752756974816767,
+          "rep_ns": {
+            "max": 5246100,
+            "min": 4883700,
+            "p50": 5007300,
+            "p90": 5036500
+          },
+          "reps": 200,
+          "transactions_per_s_at_p50": 209409462.1852096
+        },
+        "cpu-8t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 4750000000,
+          "cpu_work_ns_per_transaction": 3.3162174252779555,
+          "input_gb_per_s_at_p50": 12.056062086806552,
+          "rep_ns": {
+            "max": 1399600,
+            "min": 652400,
+            "p50": 695800,
+            "p90": 840200
+          },
+          "reps": 1366,
+          "transactions_per_s_at_p50": 1507007760.850819
+        },
+        "dx12-overlap": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1781250000,
+          "cpu_work_ns_per_transaction": 7.020739408639761,
+          "input_gb_per_s_at_p50": 0.8636385911809824,
+          "rep_ns": {
+            "max": 10099100,
+            "min": 9272400,
+            "p50": 9713100,
+            "p90": 9913500
+          },
+          "reps": 104,
+          "transactions_per_s_at_p50": 107954823.8976228
+        },
+        "dx12-serial": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1609375000,
+          "cpu_work_ns_per_transaction": 6.508553165128862,
+          "input_gb_per_s_at_p50": 0.7230935264201362,
+          "rep_ns": {
+            "max": 12009700,
+            "min": 11521900,
+            "p50": 11601000,
+            "p90": 11706000
+          },
+          "reps": 87,
+          "transactions_per_s_at_p50": 90386690.80251703
+        },
+        "vulkan-overlap": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1562500000,
+          "cpu_work_ns_per_transaction": 5.830889162809952,
+          "input_gb_per_s_at_p50": 0.76681822752411,
+          "rep_ns": {
+            "max": 11434300,
+            "min": 10845800,
+            "p50": 10939500,
+            "p90": 11032800
+          },
+          "reps": 92,
+          "transactions_per_s_at_p50": 95852278.44051374
+        },
+        "vulkan-serial": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1625000000,
+          "cpu_work_ns_per_transaction": 7.174633167408131,
+          "input_gb_per_s_at_p50": 0.6767298601139095,
+          "rep_ns": {
+            "max": 13145700,
+            "min": 12327900,
+            "p50": 12395800,
+            "p90": 12495200
+          },
+          "reps": 81,
+          "transactions_per_s_at_p50": 84591232.51423869
+        }
+      },
+      "transactions_per_batch": 65536
+    },
+    {
+      "batches": 16,
+      "engines": {
+        "cpu-16t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 11703125000,
+          "cpu_work_ns_per_transaction": 23.059854822710527,
+          "input_gb_per_s_at_p50": 4.070954091041444,
+          "rep_ns": {
+            "max": 9066100,
+            "min": 7652800,
+            "p50": 8242400,
+            "p90": 8622700
+          },
+          "reps": 121,
+          "transactions_per_s_at_p50": 508869261.3801805
+        },
+        "cpu-1t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 1015625000,
+          "cpu_work_ns_per_transaction": 4.747919007843616,
+          "input_gb_per_s_at_p50": 1.6896335162898433,
+          "rep_ns": {
+            "max": 21450800,
+            "min": 19443200,
+            "p50": 19859000,
+            "p90": 20085700
+          },
+          "reps": 51,
+          "transactions_per_s_at_p50": 211204189.53623042
+        },
+        "cpu-8t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 7593750000,
+          "cpu_work_ns_per_transaction": 15.343144788580426,
+          "input_gb_per_s_at_p50": 4.002437168247152,
+          "rep_ns": {
+            "max": 9423600,
+            "min": 7123100,
+            "p50": 8383500,
+            "p90": 9101600
+          },
+          "reps": 118,
+          "transactions_per_s_at_p50": 500304646.030894
+        },
+        "dx12-overlap": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1781250000,
+          "cpu_work_ns_per_transaction": 2.2441507822059723,
+          "input_gb_per_s_at_p50": 2.7765355399255274,
+          "rep_ns": {
+            "max": 14747500,
+            "min": 11798800,
+            "p50": 12085000,
+            "p90": 12381400
+          },
+          "reps": 83,
+          "transactions_per_s_at_p50": 347066942.49069095
+        },
+        "dx12-serial": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1578125000,
+          "cpu_work_ns_per_transaction": 2.0632377037635217,
+          "input_gb_per_s_at_p50": 2.155664827152007,
+          "rep_ns": {
+            "max": 17169900,
+            "min": 15432300,
+            "p50": 15565700,
+            "p90": 15718600
+          },
+          "reps": 65,
+          "transactions_per_s_at_p50": 269458103.3940009
+        },
+        "vulkan-overlap": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1718750000,
+          "cpu_work_ns_per_transaction": 2.0443666272047087,
+          "input_gb_per_s_at_p50": 2.7523937330817816,
+          "rep_ns": {
+            "max": 13385700,
+            "min": 11926800,
+            "p50": 12191000,
+            "p90": 12592600
+          },
+          "reps": 82,
+          "transactions_per_s_at_p50": 344049216.6352227
+        },
+        "vulkan-serial": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1640625000,
+          "cpu_work_ns_per_transaction": 2.2796552572677387,
+          "input_gb_per_s_at_p50": 2.238648581931722,
+          "rep_ns": {
+            "max": 17629900,
+            "min": 14889900,
+            "p50": 14988700,
+            "p90": 15371000
+          },
+          "reps": 67,
+          "transactions_per_s_at_p50": 279831072.7414652
+        }
+      },
+      "transactions_per_batch": 262144
+    }
+  ],
+  "command": "target\\release\\bytelanes-bench.exe stream --machine ryzen --machine-desc Desktop: AMD Ryzen 7 5700X (8C/16T, Zen 3), 32 GB DDR4-3200 dual channel, Gigabyte A520I AC (BIOS F23c), AMD Radeon RX 7800 XT 16 GB (ASRock); Windows power plan Balanced; on AC power --host-link PCIe 3.0 x16 (card supports 4.0 x16; A520 slot limit), Resizable BAR on; read with GPU-Z 2.72.0 under load --note Throughput run: CPU reference without per-op copies (c906b86) on 1/8/16 threads; GPU with pooled device buffers (c0bba40), program overlap off and on (9d735e7). GitHub Actions runner stopped; no other benchmark running.",
+  "commit": [
+    {
+      "batches": 16,
+      "engines": {
+        "cpu-16t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 4359375000,
+          "cpu_work_ns_per_transaction": 67.94564205243712,
+          "input_gb_per_s_at_p50": 16.9240966448205,
+          "rep_ns": {
+            "max": 1548400,
+            "min": 907500,
+            "p50": 1022300,
+            "p90": 1097400
+          },
+          "reps": 979,
+          "transactions_per_s_at_p50": 64106426.684926145
+        },
+        "cpu-1t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 984375000,
+          "cpu_work_ns_per_transaction": 46.21652456430289,
+          "input_gb_per_s_at_p50": 5.639526712083184,
+          "rep_ns": {
+            "max": 3300600,
+            "min": 2959200,
+            "p50": 3067900,
+            "p90": 3197200
+          },
+          "reps": 325,
+          "transactions_per_s_at_p50": 21361843.606375694
+        },
+        "cpu-8t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 4718750000,
+          "cpu_work_ns_per_transaction": 58.11332597955761,
+          "input_gb_per_s_at_p50": 21.892324433759335,
+          "rep_ns": {
+            "max": 1351700,
+            "min": 744400,
+            "p50": 790300,
+            "p90": 832300
+          },
+          "reps": 1239,
+          "transactions_per_s_at_p50": 82925471.33999747
+        },
+        "dx12-overlap": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1703125000,
+          "cpu_work_ns_per_transaction": 177.80368610963984,
+          "input_gb_per_s_at_p50": 1.0064104517982932,
+          "rep_ns": {
+            "max": 17899300,
+            "min": 17098100,
+            "p50": 17191300,
+            "p90": 17282100
+          },
+          "reps": 59,
+          "transactions_per_s_at_p50": 3812160.8022662625
+        },
+        "dx12-serial": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1578125000,
+          "cpu_work_ns_per_transaction": 178.81393432617188,
+          "input_gb_per_s_at_p50": 0.8196113579732253,
+          "rep_ns": {
+            "max": 21963400,
+            "min": 20896800,
+            "p50": 21109400,
+            "p90": 21414100
+          },
+          "reps": 48,
+          "transactions_per_s_at_p50": 3104588.4771713074
+        },
+        "vulkan-overlap": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1656250000,
+          "cpu_work_ns_per_transaction": 161.50936003654235,
+          "input_gb_per_s_at_p50": 1.0765935310442671,
+          "rep_ns": {
+            "max": 17832800,
+            "min": 15935000,
+            "p50": 16070600,
+            "p90": 16897900
+          },
+          "reps": 62,
+          "transactions_per_s_at_p50": 4078005.799410103
+        },
+        "vulkan-serial": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1515625000,
+          "cpu_work_ns_per_transaction": 157.35626220703125,
+          "input_gb_per_s_at_p50": 0.8655815652156511,
+          "rep_ns": {
+            "max": 22298300,
+            "min": 19842200,
+            "p50": 19988300,
+            "p90": 20193600
+          },
+          "reps": 50,
+          "transactions_per_s_at_p50": 3278718.0500592845
+        }
+      },
+      "transactions_per_batch": 4096
+    },
+    {
+      "batches": 16,
+      "engines": {
+        "cpu-16t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 8156250000,
+          "cpu_work_ns_per_transaction": 180.89316612066224,
+          "input_gb_per_s_at_p50": 11.977918238776004,
+          "rep_ns": {
+            "max": 6605800,
+            "min": 5631800,
+            "p50": 5777800,
+            "p90": 6051100
+          },
+          "reps": 172,
+          "transactions_per_s_at_p50": 45370902.41960608
+        },
+        "cpu-1t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 1015625000,
+          "cpu_work_ns_per_transaction": 46.12264179048084,
+          "input_gb_per_s_at_p50": 5.762989832371531,
+          "rep_ns": {
+            "max": 12330600,
+            "min": 11844600,
+            "p50": 12008700,
+            "p90": 12110500
+          },
+          "reps": 84,
+          "transactions_per_s_at_p50": 21829506.94080125
+        },
+        "cpu-8t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 7500000000,
+          "cpu_work_ns_per_transaction": 166.33854355922966,
+          "input_gb_per_s_at_p50": 11.992239685317715,
+          "rep_ns": {
+            "max": 6718900,
+            "min": 5678600,
+            "p50": 5770900,
+            "p90": 6042000
+          },
+          "reps": 172,
+          "transactions_per_s_at_p50": 45425150.323173165
+        },
+        "dx12-overlap": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1656250000,
+          "cpu_work_ns_per_transaction": 66.04839015651393,
+          "input_gb_per_s_at_p50": 2.568217581854819,
+          "rep_ns": {
+            "max": 31478500,
+            "min": 26574900,
+            "p50": 26947100,
+            "p90": 28978700
+          },
+          "reps": 37,
+          "transactions_per_s_at_p50": 9728096.900965223
+        },
+        "dx12-serial": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1515625000,
+          "cpu_work_ns_per_transaction": 63.578287760416664,
+          "input_gb_per_s_at_p50": 2.047709132225536,
+          "rep_ns": {
+            "max": 34445200,
+            "min": 33516200,
+            "p50": 33796800,
+            "p90": 34073200
+          },
+          "reps": 30,
+          "transactions_per_s_at_p50": 7756473.985702788
+        },
+        "vulkan-overlap": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1625000000,
+          "cpu_work_ns_per_transaction": 70.12311150045956,
+          "input_gb_per_s_at_p50": 2.3567277024242896,
+          "rep_ns": {
+            "max": 30319300,
+            "min": 29240000,
+            "p50": 29365300,
+            "p90": 29740200
+          },
+          "reps": 34,
+          "transactions_per_s_at_p50": 8926998.87281928
+        },
+        "vulkan-serial": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1609375000,
+          "cpu_work_ns_per_transaction": 73.06375811176915,
+          "input_gb_per_s_at_p50": 2.1302614268432705,
+          "rep_ns": {
+            "max": 34121200,
+            "min": 32348500,
+            "p50": 32487100,
+            "p90": 32793400
+          },
+          "reps": 31,
+          "transactions_per_s_at_p50": 8069172.071376024
+        }
+      },
+      "transactions_per_batch": 16384
+    },
+    {
+      "batches": 16,
+      "engines": {
+        "cpu-16t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 13062500000,
+          "cpu_work_ns_per_transaction": 355.9248788016183,
+          "input_gb_per_s_at_p50": 9.562209894368872,
+          "rep_ns": {
+            "max": 29551600,
+            "min": 28769400,
+            "p50": 28949800,
+            "p90": 29392000
+          },
+          "reps": 35,
+          "transactions_per_s_at_p50": 36220492.02412452
+        },
+        "cpu-1t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 1031250000,
+          "cpu_work_ns_per_transaction": 46.83222089494978,
+          "input_gb_per_s_at_p50": 5.667908748049779,
+          "rep_ns": {
+            "max": 49497700,
+            "min": 48538900,
+            "p50": 48840600,
+            "p90": 49433300
+          },
+          "reps": 21,
+          "transactions_per_s_at_p50": 21469351.318370372
+        },
+        "cpu-8t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 7890625000,
+          "cpu_work_ns_per_transaction": 209.03017785814075,
+          "input_gb_per_s_at_p50": 9.84455854478209,
+          "rep_ns": {
+            "max": 28803200,
+            "min": 27830600,
+            "p50": 28119500,
+            "p90": 28603200
+          },
+          "reps": 36,
+          "transactions_per_s_at_p50": 37289994.487810954
+        },
+        "dx12-overlap": {
+          "cpu_caller_waiting_ns": 1046875000,
+          "cpu_process_ns": 1500000000,
+          "cpu_work_ns_per_transaction": 36.0111395517985,
+          "input_gb_per_s_at_p50": 3.1388652990507118,
+          "rep_ns": {
+            "max": 88460500,
+            "min": 88039900,
+            "p50": 88192400,
+            "p90": 88430400
+          },
+          "reps": 12,
+          "transactions_per_s_at_p50": 11889641.284283
+        },
+        "dx12-serial": {
+          "cpu_caller_waiting_ns": 1031250000,
+          "cpu_process_ns": 1437500000,
+          "cpu_work_ns_per_transaction": 35.22092645818537,
+          "input_gb_per_s_at_p50": 2.964572412596624,
+          "rep_ns": {
+            "max": 94912100,
+            "min": 93118300,
+            "p50": 93377400,
+            "p90": 93550400
+          },
+          "reps": 11,
+          "transactions_per_s_at_p50": 11229440.956805395
+        },
+        "vulkan-overlap": {
+          "cpu_caller_waiting_ns": 1031250000,
+          "cpu_process_ns": 1671875000,
+          "cpu_work_ns_per_transaction": 50.91230074564616,
+          "input_gb_per_s_at_p50": 3.2215928507338147,
+          "rep_ns": {
+            "max": 87459000,
+            "min": 85580700,
+            "p50": 85927700,
+            "p90": 86371100
+          },
+          "reps": 12,
+          "transactions_per_s_at_p50": 12203003.222476572
+        },
+        "vulkan-serial": {
+          "cpu_caller_waiting_ns": 1093750000,
+          "cpu_process_ns": 1687500000,
+          "cpu_work_ns_per_transaction": 47.18701044718424,
+          "input_gb_per_s_at_p50": 3.0596780322498285,
+          "rep_ns": {
+            "max": 90872600,
+            "min": 89911400,
+            "p50": 90474900,
+            "p90": 90744200
+          },
+          "reps": 12,
+          "transactions_per_s_at_p50": 11589689.516097834
+        }
+      },
+      "transactions_per_batch": 65536
+    },
+    {
+      "batches": 16,
+      "engines": {
+        "cpu-16t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 14828125000,
+          "cpu_work_ns_per_transaction": 392.81116591559515,
+          "input_gb_per_s_at_p50": 9.617941182090922,
+          "rep_ns": {
+            "max": 115753800,
+            "min": 114544200,
+            "p50": 115128200,
+            "p90": 115753800
+          },
+          "reps": 9,
+          "transactions_per_s_at_p50": 36431595.386708036
+        },
+        "cpu-1t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 1171875000,
+          "cpu_work_ns_per_transaction": 46.566128730773926,
+          "input_gb_per_s_at_p50": 5.6497820083963814,
+          "rep_ns": {
+            "max": 196348200,
+            "min": 195702500,
+            "p50": 195989200,
+            "p90": 196348200
+          },
+          "reps": 6,
+          "transactions_per_s_at_p50": 21400689.425743867
+        },
+        "cpu-8t": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 7734375000,
+          "cpu_work_ns_per_transaction": 204.89096641540527,
+          "input_gb_per_s_at_p50": 9.991565440779043,
+          "rep_ns": {
+            "max": 112693400,
+            "min": 110254000,
+            "p50": 110823100,
+            "p90": 112693400
+          },
+          "reps": 9,
+          "transactions_per_s_at_p50": 37846838.79082971
+        },
+        "dx12-overlap": {
+          "cpu_caller_waiting_ns": 1578125000,
+          "cpu_process_ns": 2218750000,
+          "cpu_work_ns_per_transaction": 30.547380447387695,
+          "input_gb_per_s_at_p50": 3.503966796218627,
+          "rep_ns": {
+            "max": 317730800,
+            "min": 314950700,
+            "p50": 316012200,
+            "p90": 317730800
+          },
+          "reps": 5,
+          "transactions_per_s_at_p50": 13272601.500828132
+        },
+        "dx12-serial": {
+          "cpu_caller_waiting_ns": 1671875000,
+          "cpu_process_ns": 2359375000,
+          "cpu_work_ns_per_transaction": 32.782554626464844,
+          "input_gb_per_s_at_p50": 3.3030744558991985,
+          "rep_ns": {
+            "max": 336398300,
+            "min": 334120500,
+            "p50": 335232000,
+            "p90": 336398300
+          },
+          "reps": 5,
+          "transactions_per_s_at_p50": 12511645.666284842
+        },
+        "vulkan-overlap": {
+          "cpu_caller_waiting_ns": 1500000000,
+          "cpu_process_ns": 2328125000,
+          "cpu_work_ns_per_transaction": 39.48807716369629,
+          "input_gb_per_s_at_p50": 3.7279576762756257,
+          "rep_ns": {
+            "max": 297555700,
+            "min": 296528000,
+            "p50": 297024900,
+            "p90": 297555700
+          },
+          "reps": 5,
+          "transactions_per_s_at_p50": 14121051.80407434
+        },
+        "vulkan-serial": {
+          "cpu_caller_waiting_ns": 1546875000,
+          "cpu_process_ns": 2375000000,
+          "cpu_work_ns_per_transaction": 39.48807716369629,
+          "input_gb_per_s_at_p50": 3.5967759681411557,
+          "rep_ns": {
+            "max": 308062500,
+            "min": 307493000,
+            "p50": 307858000,
+            "p90": 308062500
+          },
+          "reps": 5,
+          "transactions_per_s_at_p50": 13624151.394474074
+        }
+      },
+      "transactions_per_batch": 262144
+    }
+  ],
+  "commits": {
+    "branch": "m5-atlas",
+    "bytelanes": "1bd1232d52c1d44358979c07ae25845825d9f297",
+    "uncommitted_changes": false
+  },
+  "date": "2026-11-22",
+  "gpu_host_link": "PCIe 3.0 x16 (card supports 4.0 x16; A520 slot limit), Resizable BAR on; read with GPU-Z 2.72.0 under load",
+  "gpus": [
+    {
+      "buffer_strategy": "copying",
+      "device_id": "747e",
+      "device_type": "DiscreteGpu",
+      "driver": "AMD proprietary driver",
+      "driver_info": "26.11.2 (LLPC)",
+      "name": "AMD Radeon RX 7800 XT",
+      "vendor_id": "1002",
+      "wgpu_backend": "Vulkan"
+    },
+    {
+      "buffer_strategy": "copying",
+      "device_id": "747e",
+      "device_type": "DiscreteGpu",
+      "driver": "32.0.32029.2010",
+      "driver_info": "",
+      "name": "AMD Radeon RX 7800 XT",
+      "vendor_id": "1002",
+      "wgpu_backend": "Dx12"
+    }
+  ],
+  "kind": "bytelanes-stream",
+  "machine": {
+    "description": "Desktop: AMD Ryzen 7 5700X (8C/16T, Zen 3), 32 GB DDR4-3200 dual channel, Gigabyte A520I AC (BIOS F23c), AMD Radeon RX 7800 XT 16 GB (ASRock); Windows power plan Balanced; on AC power",
+    "name": "ryzen"
+  },
+  "method": {
+    "api": "every program goes through ChannelBackend submit and poll, one program in flight; GPU times include upload, download and the result CRC",
+    "cpu_reference": "bytelanes CpuBackend on the calling thread: crc32c and RustCrypto aes/ctr with hardware CRC and AES instructions; one core",
+    "cpu_work": "process CPU time (all threads) minus the caller's CPU time spinning in poll, per repetition. Windows updates these counters at scheduler ticks (about 15.6 ms); series run at least min_time_s to bound that error",
+    "data": "generated from fixed SplitMix64 seeds",
+    "min_reps": 5,
+    "min_time_s": 1.0,
+    "verification": "every repetition's completion (status, bytes, CRC-32C of the result) must equal the CPU reference's, or the run aborts",
+    "warmup_reps": 3
+  },
+  "method_stream": "one repetition = all batches submitted (GPU) or run across the threads (CPU), then every completion collected and checked against the CPU reference; transactions_per_s uses the median repetition; cpu_work_ns_per_transaction = process CPU time (all threads) minus the caller's polling, over the series",
+  "milestone": "M5",
+  "network": "n/a: single machine",
+  "note": "Throughput run: CPU reference without per-op copies (c906b86) on 1/8/16 threads; GPU with pooled device buffers (c0bba40), program overlap off and on (9d735e7). GitHub Actions runner stopped; no other benchmark running.",
+  "os": "windows",
+  "os_build": "Microsoft Windows [Version 10.0.26300.10075]",
+  "purpose": "M5: throughput with many commit-log batches in flight. GPU with program overlap off (serial) and on; CPU reference on 1, half and all logical CPUs (one CpuBackend per thread, batches spread round-robin)",
+  "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13) (release profile)",
+  "started_utc": "14:16:25Z",
+  "wgpu": "30.0.2",
+  "workload": {
+    "audit": "per batch: [Decrypt the encrypted amount column into device memory, chained into Filter i64 Gt, indices to host]",
+    "batches_in_flight": 16,
+    "commit": "per batch: [Filter i64 Gt on the amount column] and [Encrypt AES-256-CTR of the records], both host to host; every batch reads the same generated records with its own IV",
+    "cpu_threads": [
+      1,
+      8,
+      16
+    ],
+    "units": "transactions"
+  }
+}

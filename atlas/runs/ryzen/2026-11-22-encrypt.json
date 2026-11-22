@@ -1,0 +1,924 @@
+{
+  "command": "target\\release\\bytelanes-bench.exe ops --machine ryzen --machine-desc Desktop: AMD Ryzen 7 5700X (8C/16T, Zen 3), 32 GB DDR4-3200 dual channel, Gigabyte A520I AC (BIOS F23c), AMD Radeon RX 7800 XT 16 GB (ASRock); Windows power plan Balanced; on AC power --host-link PCIe 3.0 x16 (card supports 4.0 x16; A520 slot limit), Resizable BAR on; read with GPU-Z 2.72.0 under load --note Tuned M5 backend (single readback wait per program, pooled upload and readback staging, slicing-by-4 CRC). GitHub Actions runner stopped; no other benchmark running.",
+  "commits": {
+    "branch": "m5-atlas",
+    "bytelanes": "cc13614e4d6eb1015900c4d7d4b2c120691ca291",
+    "uncommitted_changes": false
+  },
+  "date": "2026-11-22",
+  "gpu_host_link": "PCIe 3.0 x16 (card supports 4.0 x16; A520 slot limit), Resizable BAR on; read with GPU-Z 2.72.0 under load",
+  "gpus": [
+    {
+      "buffer_strategy": "copying",
+      "device_id": "747e",
+      "device_type": "DiscreteGpu",
+      "driver": "AMD proprietary driver",
+      "driver_info": "26.11.2 (LLPC)",
+      "name": "AMD Radeon RX 7800 XT",
+      "vendor_id": "1002",
+      "wgpu_backend": "Vulkan"
+    },
+    {
+      "buffer_strategy": "copying",
+      "device_id": "747e",
+      "device_type": "DiscreteGpu",
+      "driver": "32.0.32029.2010",
+      "driver_info": "",
+      "name": "AMD Radeon RX 7800 XT",
+      "vendor_id": "1002",
+      "wgpu_backend": "Dx12"
+    }
+  ],
+  "kind": "bytelanes-op",
+  "machine": {
+    "description": "Desktop: AMD Ryzen 7 5700X (8C/16T, Zen 3), 32 GB DDR4-3200 dual channel, Gigabyte A520I AC (BIOS F23c), AMD Radeon RX 7800 XT 16 GB (ASRock); Windows power plan Balanced; on AC power",
+    "name": "ryzen"
+  },
+  "method": {
+    "api": "every program goes through ChannelBackend submit and poll, one program in flight; GPU times include upload, download and the result CRC",
+    "cpu_reference": "bytelanes CpuBackend on the calling thread: crc32c and RustCrypto aes/ctr with hardware CRC and AES instructions; one core",
+    "cpu_work": "process CPU time (all threads) minus the caller's CPU time spinning in poll, per repetition. Windows updates these counters at scheduler ticks (about 15.6 ms); series run at least min_time_s to bound that error",
+    "data": "generated from fixed SplitMix64 seeds",
+    "min_reps": 5,
+    "min_time_s": 1.0,
+    "verification": "every repetition's completion (status, bytes, CRC-32C of the result) must equal the CPU reference's, or the run aborts",
+    "warmup_reps": 3
+  },
+  "milestone": "M5",
+  "network": "n/a: single machine",
+  "note": "Tuned M5 backend (single readback wait per program, pooled upload and readback staging, slicing-by-4 CRC). GitHub Actions runner stopped; no other benchmark running.",
+  "op": "encrypt",
+  "os": "windows",
+  "os_build": "Microsoft Windows [Version 10.0.26300.10075]",
+  "points": [
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 62500000,
+          "cpu_process_ns": 171875000,
+          "cpu_work_ns_per_byte": 8.53125,
+          "cpu_work_ns_per_rep": 546,
+          "cpu_work_ns_per_unit": 8.53125,
+          "latency_ns": {
+            "max": 15600,
+            "mean": 866,
+            "min": 800,
+            "p50": 900,
+            "p90": 900,
+            "p99": 900
+          },
+          "reps": 200000,
+          "throughput_gb_per_s_at_p50": 0.07111111111111112,
+          "units_per_s_at_p50": 71111111.11111112,
+          "wall_ns": 186812400
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1671875000,
+          "cpu_work_ns_per_byte": 2602.390625,
+          "cpu_work_ns_per_rep": 166553,
+          "cpu_work_ns_per_unit": 2602.390625,
+          "latency_ns": {
+            "max": 311300,
+            "mean": 247864,
+            "min": 239800,
+            "p50": 246300,
+            "p90": 253900,
+            "p99": 269000
+          },
+          "reps": 4034,
+          "throughput_gb_per_s_at_p50": 0.0002598457166057653,
+          "units_per_s_at_p50": 259845.7166057653,
+          "wall_ns": 1000151000
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1609375000,
+          "cpu_work_ns_per_byte": 2514.25,
+          "cpu_work_ns_per_rep": 160912,
+          "cpu_work_ns_per_unit": 2514.25,
+          "latency_ns": {
+            "max": 838500,
+            "mean": 264004,
+            "min": 251600,
+            "p50": 258800,
+            "p90": 267400,
+            "p99": 318200
+          },
+          "reps": 3787,
+          "throughput_gb_per_s_at_p50": 0.0002472952086553323,
+          "units_per_s_at_p50": 247295.2086553323,
+          "wall_ns": 1000033900
+        }
+      },
+      "expected": [
+        {
+          "bytes": 64,
+          "crc": "c9b46330"
+        }
+      ],
+      "input_bytes": 64,
+      "programs": 1,
+      "size_bytes": 64,
+      "units": 64
+    },
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 31250000,
+          "cpu_process_ns": 203125000,
+          "cpu_work_ns_per_byte": 3.35546875,
+          "cpu_work_ns_per_rep": 859,
+          "cpu_work_ns_per_unit": 3.35546875,
+          "latency_ns": {
+            "max": 19400,
+            "mean": 899,
+            "min": 800,
+            "p50": 900,
+            "p90": 900,
+            "p99": 1000
+          },
+          "reps": 200000,
+          "throughput_gb_per_s_at_p50": 0.2844444444444445,
+          "units_per_s_at_p50": 284444444.4444445,
+          "wall_ns": 192805500
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1734375000,
+          "cpu_work_ns_per_byte": 738.578125,
+          "cpu_work_ns_per_rep": 189076,
+          "cpu_work_ns_per_unit": 738.578125,
+          "latency_ns": {
+            "max": 320100,
+            "mean": 257468,
+            "min": 249800,
+            "p50": 256000,
+            "p90": 263000,
+            "p99": 276600
+          },
+          "reps": 3884,
+          "throughput_gb_per_s_at_p50": 0.001,
+          "units_per_s_at_p50": 1000000.0,
+          "wall_ns": 1000250100
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1593750000,
+          "cpu_work_ns_per_byte": 621.3046875,
+          "cpu_work_ns_per_rep": 159054,
+          "cpu_work_ns_per_unit": 621.3046875,
+          "latency_ns": {
+            "max": 473100,
+            "mean": 267847,
+            "min": 259500,
+            "p50": 265800,
+            "p90": 274800,
+            "p99": 297100
+          },
+          "reps": 3733,
+          "throughput_gb_per_s_at_p50": 0.0009631301730624529,
+          "units_per_s_at_p50": 963130.1730624529,
+          "wall_ns": 1000115500
+        }
+      },
+      "expected": [
+        {
+          "bytes": 256,
+          "crc": "f159ffc6"
+        }
+      ],
+      "input_bytes": 256,
+      "programs": 1,
+      "size_bytes": 256,
+      "units": 256
+    },
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 31250000,
+          "cpu_process_ns": 218750000,
+          "cpu_work_ns_per_byte": 0.9150390625,
+          "cpu_work_ns_per_rep": 937,
+          "cpu_work_ns_per_unit": 0.9150390625,
+          "latency_ns": {
+            "max": 20000,
+            "mean": 1042,
+            "min": 1000,
+            "p50": 1000,
+            "p90": 1100,
+            "p99": 1100
+          },
+          "reps": 200000,
+          "throughput_gb_per_s_at_p50": 1.024,
+          "units_per_s_at_p50": 1024000000.0,
+          "wall_ns": 221450100
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1640625000,
+          "cpu_work_ns_per_byte": 210.9267578125,
+          "cpu_work_ns_per_rep": 215989,
+          "cpu_work_ns_per_unit": 210.9267578125,
+          "latency_ns": {
+            "max": 422700,
+            "mean": 337121,
+            "min": 324100,
+            "p50": 335400,
+            "p90": 347200,
+            "p99": 367600
+          },
+          "reps": 2966,
+          "throughput_gb_per_s_at_p50": 0.0030530709600477043,
+          "units_per_s_at_p50": 3053070.960047704,
+          "wall_ns": 1000091100
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1593750000,
+          "cpu_work_ns_per_byte": 184.3662109375,
+          "cpu_work_ns_per_rep": 188791,
+          "cpu_work_ns_per_unit": 184.3662109375,
+          "latency_ns": {
+            "max": 552600,
+            "mean": 317931,
+            "min": 300600,
+            "p50": 314800,
+            "p90": 325300,
+            "p99": 372800
+          },
+          "reps": 3145,
+          "throughput_gb_per_s_at_p50": 0.003252858958068615,
+          "units_per_s_at_p50": 3252858.958068615,
+          "wall_ns": 1000099800
+        }
+      },
+      "expected": [
+        {
+          "bytes": 1024,
+          "crc": "c2c2679d"
+        }
+      ],
+      "input_bytes": 1024,
+      "programs": 1,
+      "size_bytes": 1024,
+      "units": 1024
+    },
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 31250000,
+          "cpu_process_ns": 343750000,
+          "cpu_work_ns_per_byte": 0.38134765625,
+          "cpu_work_ns_per_rep": 1562,
+          "cpu_work_ns_per_unit": 0.38134765625,
+          "latency_ns": {
+            "max": 13500,
+            "mean": 1681,
+            "min": 1600,
+            "p50": 1700,
+            "p90": 1700,
+            "p99": 1800
+          },
+          "reps": 200000,
+          "throughput_gb_per_s_at_p50": 2.4094117647058826,
+          "units_per_s_at_p50": 2409411764.7058825,
+          "wall_ns": 349320800
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1781250000,
+          "cpu_work_ns_per_byte": 78.588623046875,
+          "cpu_work_ns_per_rep": 321899,
+          "cpu_work_ns_per_unit": 78.588623046875,
+          "latency_ns": {
+            "max": 500500,
+            "mean": 411985,
+            "min": 402100,
+            "p50": 410000,
+            "p90": 418800,
+            "p99": 437500
+          },
+          "reps": 2427,
+          "throughput_gb_per_s_at_p50": 0.009990243902439024,
+          "units_per_s_at_p50": 9990243.902439024,
+          "wall_ns": 1000044700
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1640625000,
+          "cpu_work_ns_per_byte": 58.62158203125,
+          "cpu_work_ns_per_rep": 240114,
+          "cpu_work_ns_per_unit": 58.62158203125,
+          "latency_ns": {
+            "max": 727600,
+            "mean": 374785,
+            "min": 365300,
+            "p50": 372600,
+            "p90": 382100,
+            "p99": 418300
+          },
+          "reps": 2668,
+          "throughput_gb_per_s_at_p50": 0.010993022007514761,
+          "units_per_s_at_p50": 10993022.007514762,
+          "wall_ns": 1000102400
+        }
+      },
+      "expected": [
+        {
+          "bytes": 4096,
+          "crc": "202b6428"
+        }
+      ],
+      "input_bytes": 4096,
+      "programs": 1,
+      "size_bytes": 4096,
+      "units": 4096
+    },
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 31250000,
+          "cpu_process_ns": 1000000000,
+          "cpu_work_ns_per_byte": 0.41888427734375,
+          "cpu_work_ns_per_rep": 6863,
+          "cpu_work_ns_per_unit": 0.41888427734375,
+          "latency_ns": {
+            "max": 31300,
+            "mean": 7018,
+            "min": 4200,
+            "p50": 7800,
+            "p90": 7900,
+            "p99": 8000
+          },
+          "reps": 141137,
+          "throughput_gb_per_s_at_p50": 2.1005128205128205,
+          "units_per_s_at_p50": 2100512820.5128205,
+          "wall_ns": 1000006100
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1562500000,
+          "cpu_work_ns_per_byte": 17.10626220703125,
+          "cpu_work_ns_per_rep": 280269,
+          "cpu_work_ns_per_unit": 17.10626220703125,
+          "latency_ns": {
+            "max": 595400,
+            "mean": 498356,
+            "min": 480700,
+            "p50": 496900,
+            "p90": 507100,
+            "p99": 531000
+          },
+          "reps": 2007,
+          "throughput_gb_per_s_at_p50": 0.03297242906017307,
+          "units_per_s_at_p50": 32972429.060173072,
+          "wall_ns": 1000334200
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1546875000,
+          "cpu_work_ns_per_byte": 14.62689208984375,
+          "cpu_work_ns_per_rep": 239647,
+          "cpu_work_ns_per_unit": 14.62689208984375,
+          "latency_ns": {
+            "max": 658300,
+            "mean": 438193,
+            "min": 425700,
+            "p50": 436400,
+            "p90": 445200,
+            "p99": 478200
+          },
+          "reps": 2282,
+          "throughput_gb_per_s_at_p50": 0.03754353803849679,
+          "units_per_s_at_p50": 37543538.03849679,
+          "wall_ns": 1000104300
+        }
+      },
+      "expected": [
+        {
+          "bytes": 16384,
+          "crc": "46d5d81b"
+        }
+      ],
+      "input_bytes": 16384,
+      "programs": 1,
+      "size_bytes": 16384,
+      "units": 16384
+    },
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 15625000,
+          "cpu_process_ns": 1000000000,
+          "cpu_work_ns_per_byte": 0.24273681640625,
+          "cpu_work_ns_per_rep": 15908,
+          "cpu_work_ns_per_unit": 0.24273681640625,
+          "latency_ns": {
+            "max": 43500,
+            "mean": 16098,
+            "min": 14400,
+            "p50": 15000,
+            "p90": 18800,
+            "p99": 19300
+          },
+          "reps": 61876,
+          "throughput_gb_per_s_at_p50": 4.369066666666667,
+          "units_per_s_at_p50": 4369066666.666667,
+          "wall_ns": 1000013600
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1687500000,
+          "cpu_work_ns_per_byte": 6.274169921875,
+          "cpu_work_ns_per_rep": 411184,
+          "cpu_work_ns_per_unit": 6.274169921875,
+          "latency_ns": {
+            "max": 711500,
+            "mean": 598281,
+            "min": 586400,
+            "p50": 596000,
+            "p90": 606500,
+            "p99": 634500
+          },
+          "reps": 1672,
+          "throughput_gb_per_s_at_p50": 0.10995973154362416,
+          "units_per_s_at_p50": 109959731.54362416,
+          "wall_ns": 1000438100
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1578125000,
+          "cpu_work_ns_per_byte": 4.722412109375,
+          "cpu_work_ns_per_rep": 309488,
+          "cpu_work_ns_per_unit": 4.722412109375,
+          "latency_ns": {
+            "max": 632300,
+            "mean": 535404,
+            "min": 505200,
+            "p50": 533900,
+            "p90": 544500,
+            "p99": 568900
+          },
+          "reps": 1868,
+          "throughput_gb_per_s_at_p50": 0.12274957857276644,
+          "units_per_s_at_p50": 122749578.57276644,
+          "wall_ns": 1000270200
+        }
+      },
+      "expected": [
+        {
+          "bytes": 65536,
+          "crc": "69c3a561"
+        }
+      ],
+      "input_bytes": 65536,
+      "programs": 1,
+      "size_bytes": 65536,
+      "units": 65536
+    },
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 1000000000,
+          "cpu_work_ns_per_byte": 0.21628570556640625,
+          "cpu_work_ns_per_rep": 56698,
+          "cpu_work_ns_per_unit": 0.21628570556640625,
+          "latency_ns": {
+            "max": 104400,
+            "mean": 56636,
+            "min": 55200,
+            "p50": 56300,
+            "p90": 58200,
+            "p99": 63400
+          },
+          "reps": 17637,
+          "throughput_gb_per_s_at_p50": 4.656198934280639,
+          "units_per_s_at_p50": 4656198934.28064,
+          "wall_ns": 1000011200
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1609375000,
+          "cpu_work_ns_per_byte": 1.6098175048828125,
+          "cpu_work_ns_per_rep": 422004,
+          "cpu_work_ns_per_unit": 1.6098175048828125,
+          "latency_ns": {
+            "max": 800200,
+            "mean": 692675,
+            "min": 679800,
+            "p50": 689700,
+            "p90": 703200,
+            "p99": 734600
+          },
+          "reps": 1444,
+          "throughput_gb_per_s_at_p50": 0.38008409453385533,
+          "units_per_s_at_p50": 380084094.5338553,
+          "wall_ns": 1000318100
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1562500000,
+          "cpu_work_ns_per_byte": 1.2331962585449219,
+          "cpu_work_ns_per_rep": 323275,
+          "cpu_work_ns_per_unit": 1.2331962585449219,
+          "latency_ns": {
+            "max": 713800,
+            "mean": 574889,
+            "min": 561600,
+            "p50": 572000,
+            "p90": 585100,
+            "p99": 623500
+          },
+          "reps": 1740,
+          "throughput_gb_per_s_at_p50": 0.4582937062937063,
+          "units_per_s_at_p50": 458293706.2937063,
+          "wall_ns": 1000430900
+        }
+      },
+      "expected": [
+        {
+          "bytes": 262144,
+          "crc": "96915fb6"
+        }
+      ],
+      "input_bytes": 262144,
+      "programs": 1,
+      "size_bytes": 262144,
+      "units": 262144
+    },
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 1000000000,
+          "cpu_work_ns_per_byte": 0.5452680587768555,
+          "cpu_work_ns_per_rep": 571755,
+          "cpu_work_ns_per_unit": 0.5452680587768555,
+          "latency_ns": {
+            "max": 890900,
+            "mean": 571754,
+            "min": 522100,
+            "p50": 566500,
+            "p90": 591900,
+            "p99": 679700
+          },
+          "reps": 1749,
+          "throughput_gb_per_s_at_p50": 1.8509726390114742,
+          "units_per_s_at_p50": 1850972639.0114741,
+          "wall_ns": 1000147200
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1515625000,
+          "cpu_work_ns_per_byte": 0.43324947357177734,
+          "cpu_work_ns_per_rep": 454295,
+          "cpu_work_ns_per_unit": 0.43324947357177734,
+          "latency_ns": {
+            "max": 1160000,
+            "mean": 881216,
+            "min": 839800,
+            "p50": 880600,
+            "p90": 895200,
+            "p99": 935300
+          },
+          "reps": 1135,
+          "throughput_gb_per_s_at_p50": 1.190751760163525,
+          "units_per_s_at_p50": 1190751760.1635249,
+          "wall_ns": 1000258200
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 984375000,
+          "cpu_process_ns": 1640625000,
+          "cpu_work_ns_per_byte": 0.4967050552368164,
+          "cpu_work_ns_per_rep": 520833,
+          "cpu_work_ns_per_unit": 0.4967050552368164,
+          "latency_ns": {
+            "max": 1253000,
+            "mean": 793690,
+            "min": 756700,
+            "p50": 786700,
+            "p90": 816700,
+            "p99": 844300
+          },
+          "reps": 1260,
+          "throughput_gb_per_s_at_p50": 1.332879115291725,
+          "units_per_s_at_p50": 1332879115.291725,
+          "wall_ns": 1000136400
+        }
+      },
+      "expected": [
+        {
+          "bytes": 1048576,
+          "crc": "b2aaea67"
+        }
+      ],
+      "input_bytes": 1048576,
+      "programs": 1,
+      "size_bytes": 1048576,
+      "units": 1048576
+    },
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 1000000000,
+          "cpu_work_ns_per_byte": 0.5149428844451904,
+          "cpu_work_ns_per_rep": 2159827,
+          "cpu_work_ns_per_unit": 0.5149428844451904,
+          "latency_ns": {
+            "max": 2388500,
+            "mean": 2161303,
+            "min": 2044000,
+            "p50": 2149000,
+            "p90": 2194100,
+            "p99": 2335100
+          },
+          "reps": 463,
+          "throughput_gb_per_s_at_p50": 1.951746859004188,
+          "units_per_s_at_p50": 1951746859.004188,
+          "wall_ns": 1000736700
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1578125000,
+          "cpu_work_ns_per_byte": 0.2101154327392578,
+          "cpu_work_ns_per_rep": 881288,
+          "cpu_work_ns_per_unit": 0.2101154327392578,
+          "latency_ns": {
+            "max": 1671500,
+            "mean": 1525184,
+            "min": 1497000,
+            "p50": 1518000,
+            "p90": 1542700,
+            "p99": 1636200
+          },
+          "reps": 656,
+          "throughput_gb_per_s_at_p50": 2.763046113306983,
+          "units_per_s_at_p50": 2763046113.306983,
+          "wall_ns": 1000569700
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1625000000,
+          "cpu_work_ns_per_byte": 0.2292485237121582,
+          "cpu_work_ns_per_rep": 961538,
+          "cpu_work_ns_per_unit": 0.2292485237121582,
+          "latency_ns": {
+            "max": 2594800,
+            "mean": 1539923,
+            "min": 1515100,
+            "p50": 1533600,
+            "p90": 1553200,
+            "p99": 1605400
+          },
+          "reps": 650,
+          "throughput_gb_per_s_at_p50": 2.734940010432968,
+          "units_per_s_at_p50": 2734940010.432968,
+          "wall_ns": 1000994600
+        }
+      },
+      "expected": [
+        {
+          "bytes": 4194304,
+          "crc": "0d031997"
+        }
+      ],
+      "input_bytes": 4194304,
+      "programs": 1,
+      "size_bytes": 4194304,
+      "units": 4194304
+    },
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 1015625000,
+          "cpu_work_ns_per_byte": 0.5310172438621521,
+          "cpu_work_ns_per_rep": 8908991,
+          "cpu_work_ns_per_unit": 0.5310172438621521,
+          "latency_ns": {
+            "max": 9158100,
+            "mean": 8836272,
+            "min": 8525700,
+            "p50": 8812700,
+            "p90": 9016900,
+            "p99": 9133800
+          },
+          "reps": 114,
+          "throughput_gb_per_s_at_p50": 1.9037543545111033,
+          "units_per_s_at_p50": 1903754354.5111034,
+          "wall_ns": 1007362500
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1468750000,
+          "cpu_work_ns_per_byte": 0.14628100395202637,
+          "cpu_work_ns_per_rep": 2454188,
+          "cpu_work_ns_per_unit": 0.14628100395202637,
+          "latency_ns": {
+            "max": 5460800,
+            "mean": 5241618,
+            "min": 5015700,
+            "p50": 5306000,
+            "p90": 5342400,
+            "p99": 5439700
+          },
+          "reps": 191,
+          "throughput_gb_per_s_at_p50": 3.161932906143988,
+          "units_per_s_at_p50": 3161932906.143988,
+          "wall_ns": 1001164500
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1500000000,
+          "cpu_work_ns_per_byte": 0.1436367630958557,
+          "cpu_work_ns_per_rep": 2409825,
+          "cpu_work_ns_per_unit": 0.1436367630958557,
+          "latency_ns": {
+            "max": 6189700,
+            "mean": 4991369,
+            "min": 4894900,
+            "p50": 4979200,
+            "p90": 5021200,
+            "p99": 5214400
+          },
+          "reps": 201,
+          "throughput_gb_per_s_at_p50": 3.3694601542416454,
+          "units_per_s_at_p50": 3369460154.2416453,
+          "wall_ns": 1003282100
+        }
+      },
+      "expected": [
+        {
+          "bytes": 16777216,
+          "crc": "0e76d808"
+        }
+      ],
+      "input_bytes": 16777216,
+      "programs": 1,
+      "size_bytes": 16777216,
+      "units": 16777216
+    },
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 1015625000,
+          "cpu_work_ns_per_byte": 0.5404997020959854,
+          "cpu_work_ns_per_rep": 36272321,
+          "cpu_work_ns_per_unit": 0.5404997020959854,
+          "latency_ns": {
+            "max": 38000000,
+            "mean": 36109175,
+            "min": 34960100,
+            "p50": 36015100,
+            "p90": 36854600,
+            "p99": 38000000
+          },
+          "reps": 28,
+          "throughput_gb_per_s_at_p50": 1.863353537821636,
+          "units_per_s_at_p50": 1863353537.821636,
+          "wall_ns": 1011068600
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1000000000,
+          "cpu_process_ns": 1281250000,
+          "cpu_work_ns_per_byte": 0.11974146962165833,
+          "cpu_work_ns_per_rep": 8035714,
+          "cpu_work_ns_per_unit": 0.11974146962165833,
+          "latency_ns": {
+            "max": 29070200,
+            "mean": 28621022,
+            "min": 28346500,
+            "p50": 28645100,
+            "p90": 28858600,
+            "p99": 29070200
+          },
+          "reps": 35,
+          "throughput_gb_per_s_at_p50": 2.3427694090786906,
+          "units_per_s_at_p50": 2342769409.0786905,
+          "wall_ns": 1001740500
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1437500000,
+          "cpu_work_ns_per_byte": 0.17462298274040222,
+          "cpu_work_ns_per_rep": 11718750,
+          "cpu_work_ns_per_unit": 0.17462298274040222,
+          "latency_ns": {
+            "max": 28413200,
+            "mean": 28065830,
+            "min": 27757700,
+            "p50": 28062500,
+            "p90": 28292200,
+            "p99": 28413200
+          },
+          "reps": 36,
+          "throughput_gb_per_s_at_p50": 2.3914071804008907,
+          "units_per_s_at_p50": 2391407180.400891,
+          "wall_ns": 1010374600
+        }
+      },
+      "expected": [
+        {
+          "bytes": 67108864,
+          "crc": "92e81f8e"
+        }
+      ],
+      "input_bytes": 67108864,
+      "programs": 1,
+      "size_bytes": 67108864,
+      "units": 67108864
+    },
+    {
+      "engines": {
+        "cpu": {
+          "cpu_caller_waiting_ns": 0,
+          "cpu_process_ns": 1015625000,
+          "cpu_work_ns_per_byte": 0.5404997058212757,
+          "cpu_work_ns_per_rep": 145089285,
+          "cpu_work_ns_per_unit": 0.5404997058212757,
+          "latency_ns": {
+            "max": 147060700,
+            "mean": 144411300,
+            "min": 142991300,
+            "p50": 144291300,
+            "p90": 147060700,
+            "p99": 147060700
+          },
+          "reps": 7,
+          "throughput_gb_per_s_at_p50": 1.860371734123956,
+          "units_per_s_at_p50": 1860371734.123956,
+          "wall_ns": 1010885300
+        },
+        "dx12": {
+          "cpu_caller_waiting_ns": 1015625000,
+          "cpu_process_ns": 1312500000,
+          "cpu_work_ns_per_byte": 0.10054050385951996,
+          "cpu_work_ns_per_rep": 26988636,
+          "cpu_work_ns_per_unit": 0.10054050385951996,
+          "latency_ns": {
+            "max": 93870800,
+            "mean": 92666418,
+            "min": 92179400,
+            "p50": 92634600,
+            "p90": 93049100,
+            "p99": 93870800
+          },
+          "reps": 11,
+          "throughput_gb_per_s_at_p50": 2.8977882562239166,
+          "units_per_s_at_p50": 2897788256.2239165,
+          "wall_ns": 1019333200
+        },
+        "vulkan": {
+          "cpu_caller_waiting_ns": 1046875000,
+          "cpu_process_ns": 1546875000,
+          "cpu_work_ns_per_byte": 0.1552204266190529,
+          "cpu_work_ns_per_rep": 41666666,
+          "cpu_work_ns_per_unit": 0.1552204266190529,
+          "latency_ns": {
+            "max": 105769400,
+            "mean": 88876116,
+            "min": 86517500,
+            "p50": 87298000,
+            "p90": 87973200,
+            "p99": 105769400
+          },
+          "reps": 12,
+          "throughput_gb_per_s_at_p50": 3.074932484134803,
+          "units_per_s_at_p50": 3074932484.134803,
+          "wall_ns": 1066519200
+        }
+      },
+      "expected": [
+        {
+          "bytes": 268435456,
+          "crc": "a4f72dc4"
+        }
+      ],
+      "input_bytes": 268435456,
+      "programs": 1,
+      "size_bytes": 268435456,
+      "units": 268435456
+    }
+  ],
+  "purpose": "M5 atlas: CPU-versus-GPU crossover input size for encrypt",
+  "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13) (release profile)",
+  "started_utc": "13:38:35Z",
+  "summary": {
+    "dx12": {
+      "cpu_time_crossover": 1048576,
+      "definition": "latency_crossover: smallest size_bytes from which the GPU's median latency is below the CPU reference's at every larger measured size_bytes. cpu_time_crossover: the same for CPU time spent on the work. null: the GPU does not win from any measured size_bytes upward.",
+      "latency_crossover": 4194304
+    },
+    "vulkan": {
+      "cpu_time_crossover": 1048576,
+      "definition": "latency_crossover: smallest size_bytes from which the GPU's median latency is below the CPU reference's at every larger measured size_bytes. cpu_time_crossover: the same for CPU time spent on the work. null: the GPU does not win from any measured size_bytes upward.",
+      "latency_crossover": 4194304
+    }
+  },
+  "wgpu": "30.0.2",
+  "workload": "generated bytes, host buffer to host buffer"
+}
