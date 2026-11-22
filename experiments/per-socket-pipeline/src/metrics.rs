@@ -25,7 +25,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Barrier, Mutex};
 use std::time::{Duration, Instant};
 
-use diagsteno::config::ChannelSpec;
+use diagsteno::config::{ChannelSpec, default_layout};
 use diagsteno::features::{Windower, reference};
 use diagsteno::frame::{Frame, write_ack};
 use diagsteno::sender;
@@ -35,31 +35,6 @@ use stagelanes_arch::{OsCpu, Topology};
 use stagelanes_ring::{Producer, Ring};
 
 use crate::{BATCH, Error, RING, backoff, cores_on, frames_for, fresh_dir, pin, shard_layout};
-
-/// Per-CPU interrupt totals and local-timer counts from /proc/interrupts.
-fn interrupts() -> Result<(Vec<u64>, Vec<u64>), Error> {
-    let text = std::fs::read_to_string("/proc/interrupts")?;
-    let mut lines = text.lines();
-    let ncpu = lines
-        .next()
-        .ok_or("empty /proc/interrupts")?
-        .split_whitespace()
-        .count();
-    let mut total = vec![0u64; ncpu];
-    let mut loc = vec![0u64; ncpu];
-    for line in lines {
-        let mut parts = line.split_whitespace();
-        let Some(label) = parts.next() else { continue };
-        for (i, v) in parts.take(ncpu).enumerate() {
-            let Ok(n) = v.parse::<u64>() else { break };
-            total[i] += n;
-            if label == "LOC:" {
-                loc[i] += n;
-            }
-        }
-    }
-    Ok((total, loc))
-}
 
 fn pct(sorted: &[u32], p: f64) -> Option<u32> {
     if sorted.is_empty() {
@@ -311,14 +286,22 @@ pub fn run(
     workers: usize,
     realtime: bool,
 ) -> Result<serde_json::Value, Error> {
-    let ready = Arc::new(Barrier::new(3));
+    // One shard per socket; a single-socket machine runs one shard with the
+    // whole layout.
+    let single = cores_on(topo, 1).is_empty();
+    let nshards = if single { 1 } else { 2 };
+    let ready = Arc::new(Barrier::new(nshards + 1));
     let mut shards = Vec::new();
     let mut senders = Vec::new();
     let mut pipeline_cpus: Vec<u32> = Vec::new();
     let mut occ_ingest = Vec::new();
     let mut occ_workers = Vec::new();
-    for s in 0..2usize {
-        let layout = shard_layout(s);
+    for s in 0..nshards {
+        let layout = if single {
+            default_layout()
+        } else {
+            shard_layout(s)
+        };
         let all = cores_on(topo, s as u32);
         // Index 0: housekeeping (not used). 1 ingest, 2 store, 3.. workers.
         let cores: Vec<OsCpu> = all[1..].to_vec();
@@ -376,8 +359,8 @@ pub fn run(
             Ok(())
         })
     };
+    let sampler = crate::irq::Sampler::start(store_dir)?;
     ready.wait();
-    let (irq0, loc0) = interrupts()?;
     let t0 = Instant::now();
     let mut reports = Vec::new();
     for h in senders {
@@ -399,34 +382,15 @@ pub fn run(
         windows += s.windows;
     }
     let elapsed = t0.elapsed().as_secs_f64();
-    let (irq1, loc1) = interrupts()?;
+    let irq = sampler.stop(&pipeline_cpus, elapsed)?;
     stop.store(true, Ordering::Relaxed);
     monitor.join().map_err(|_| "monitor panicked")??;
     let (occ_i, occ_w) = {
         let g = samples.lock().unwrap_or_else(|e| e.into_inner());
         (g.0.clone(), g.1.clone())
     };
-    let per_cpu = |a: &[u64], b: &[u64]| -> BTreeMap<String, u64> {
-        a.iter()
-            .zip(b)
-            .enumerate()
-            .map(|(i, (x, y))| (format!("cpu{i:02}"), y.saturating_sub(*x)))
-            .collect()
-    };
-    let irq = per_cpu(&irq0, &irq1);
-    let loc = per_cpu(&loc0, &loc1);
-    let rate = |m: &BTreeMap<String, u64>, cpus: &[u32]| -> f64 {
-        let n: u64 = cpus
-            .iter()
-            .map(|c| m.get(&format!("cpu{c:02}")).copied().unwrap_or(0))
-            .sum();
-        (n as f64 / cpus.len().max(1) as f64 / elapsed * 10.0).round() / 10.0
-    };
-    let others: Vec<u32> = (0..irq0.len() as u32)
-        .filter(|c| !pipeline_cpus.contains(c))
-        .collect();
     let late: u64 = reports.iter().map(|r| r.late_ticks).sum();
-    Ok(json!({
+    let mut out = json!({
         "realtime": realtime,
         "elapsed_s": elapsed,
         "frames": frames, "samples": samples_n, "windows": windows,
@@ -439,11 +403,10 @@ pub fn run(
                        "window_compute": summary(compute_us)},
         "ring_occupancy": {"ingest_to_store_max_over_shards": summary(occ_i),
                            "store_to_worker_max_over_workers": summary(occ_w)},
-        "interrupts_per_cpu_per_s": {"pipeline_cores_all": rate(&irq, &pipeline_cpus),
-                                     "pipeline_cores_local_timer": rate(&loc, &pipeline_cpus),
-                                     "other_cores_all": rate(&irq, &others),
-                                     "other_cores_local_timer": rate(&loc, &others)},
-        "interrupts_per_cpu_total": irq,
-        "local_timer_per_cpu_total": loc,
-    }))
+    });
+    // Interrupt fields: the Linux names as before, plus Windows' DPC counters.
+    if let (Some(o), Some(i)) = (out.as_object_mut(), irq.as_object()) {
+        o.extend(i.clone());
+    }
+    Ok(out)
 }

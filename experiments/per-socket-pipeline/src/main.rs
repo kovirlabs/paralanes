@@ -23,6 +23,7 @@
 
 #![forbid(unsafe_code)]
 
+mod irq;
 mod metrics;
 
 use std::io::{BufReader, BufWriter, Write};
