@@ -1,0 +1,16 @@
+[package]
+name = "durable-writes"
+description = "Experiment: durable batch writes, one syscall per chunk plus a flush vs one IoRing submission (stagelanes-arch DurableWriter)"
+version = "0.0.0"
+edition = "2024"
+license = "GPL-3.0-only"
+publish = false
+
+# Standalone: not part of the paralanes workspace or its CI. Needs
+# stagelanes checked out next to paralanes.
+[workspace]
+
+[dependencies]
+stagelanes-arch = { path = "../../../stagelanes/crates/stagelanes-arch" }
+cpu-time = "1.0.0"
+serde_json = "1.0.154"
