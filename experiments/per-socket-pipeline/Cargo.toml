@@ -1,0 +1,18 @@
+[package]
+name = "per-socket-pipeline"
+description = "Experiment: diagsteno ingest as one pipeline per socket on stagelanes, vs one unpinned pipeline"
+version = "0.0.0"
+edition = "2024"
+license = "GPL-3.0-only"
+publish = false
+
+# Standalone: not part of the paralanes workspace or its CI.
+[workspace]
+
+[dependencies]
+bytelanes = { path = "../../../bytelanes/crates/bytelanes" }
+diagsteno = { path = "../../../diagsteno/crates/diagsteno" }
+diagsteno-store = { path = "../../../diagsteno/crates/diagsteno-store" }
+stagelanes-arch = { path = "../../../stagelanes/crates/stagelanes-arch" }
+stagelanes-ring = { path = "../../../stagelanes/crates/stagelanes-ring" }
+serde_json = "1.0.154"
