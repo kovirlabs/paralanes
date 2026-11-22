@@ -83,7 +83,7 @@ Each machine runs its own Claude Code agent. Each repo's `CLAUDE.md` holds the w
 The machines will change: faster links between them, more GPUs, a board with PCIe 4.0, a CPU with mixed core types. The design treats hardware as a variable to measure, not a constant to code against, so new components are used as they appear.
 
 1. **Inventory, then measure.** Each machine's hardware is recorded in `docs/machines.md`. `stagelanes topology` reports the CPU side; `paralanes-chand` reports its GPU, device memory, wgpu backend, memory model (discrete or unified) and host link when it joins.
-2. **No hard-coded thresholds.** The CPU fallback size is per op, per machine and per path, taken from atlas run files, never a constant in code. A new GPU or a new link means new benchmark runs, not a code change.
+2. **No hard-coded thresholds.** The CPU fallback size is per op, per machine and per path, taken from atlas run files, never a constant in code. The size used is the CPU-time crossover (scheduler rule 3). A new GPU or a new link means new benchmark runs, not a code change.
 3. **The scheduler measures links.** `paralanes-sched` measures bandwidth and round-trip time to each `paralanes-chand` when it joins and while it runs, and places work by estimated total cost (transfer both ways plus compute) against running locally. Over 1 GbE a remote GPU wins only on work with a high compute-to-byte ratio; on a faster link the same code sends more work out.
 4. **Transports are pluggable.** `paralanes-net` hides the link behind a `Transport` trait. TCP comes first and needs no change for a faster Ethernet link; RDMA or other transports arrive as further implementations.
 5. **Link speed is a recorded variable.** Every run that crosses machines records the link type and speed at each end. The M9 tests are written so they can be re-run unchanged when a faster link arrives, giving a direct comparison.
@@ -135,7 +135,7 @@ Non-goals:
 | `diagsteno-store` | diagsteno | lib | Storage of samples and features with flush-before-acknowledge; format TBD, Parquet suggested | M7 | no |
 | `paralanes-chand` | paralanes | bin | Channel daemon on a GPU machine: receives programs, runs them on the local backend, returns results with a CRC | M9 | no |
 | `paralanes-net` | paralanes | lib | Backend that submits channel programs to a `paralanes-chand` through a `Transport` trait: TCP first, faster transports such as RDMA later | M9 | no |
-| `paralanes-sched` | paralanes | lib | Scheduler: batching, placement across GPU paths by measured cost, link measurement, CPU fallback below the crossover size, path health and failover | M9 | no |
+| `paralanes-sched` | paralanes | lib | Scheduler: batching, placement across GPU paths by measured cost, link measurement, CPU fallback below the CPU-time crossover size, path health and failover | M9 | no |
 | `paralanes-init`, `image/` | paralanes | bin, build scripts | PID 1 and the appliance image; Linux only | M10 | syscall wrappers only |
 | CUDA backend | deferred | lib | Direct NVMe-to-VRAM path; needs NVIDIA hardware | later | FFI only |
 
@@ -206,7 +206,13 @@ Rules the scheduler enforces:
 
 1. A whole program runs on one GPU; only the final `dst` may be `Host`.
 2. Programs are batched per GPU up to a time or size limit, then dispatched together.
-3. Work is placed by estimated cost from measured values: the atlas crossover per op and path, plus measured bandwidth and round-trip time for remote paths. Work below the crossover runs on the CPU reference backend, because a GPU round trip costs more than it saves on small inputs.
+3. **The goal is CPU time saved** (Evan, 22 Nov 2026). Stage cores should spend all their time on work CPUs do best, uninterrupted. So work goes to a GPU path when that costs the CPU less time than doing it on the CPU, even if the GPU is not faster.
+   - Placement uses the atlas **CPU-time crossover** per op and path, plus measured bandwidth and round-trip time for remote paths. Work below it runs on the CPU reference backend.
+   - Latency is a constraint, not the goal: work offloaded for CPU time must still meet the stage's latency budget. The atlas latency crossover says when offloading is also faster.
+   - Two rules follow:
+     - A stage core collects GPU completions between its own work items (ring pop, no interrupt, no sleep). It never spins or blocks waiting for one.
+     - The GPU path's own CPU work (the backend worker thread, upload and readback copies) runs on housekeeping cores, never on stage cores.
+   - M5 on the Ryzen showed why this matters. Over PCIe 3.0 the GPU was never faster for a single op, but it cut CPU time for large AES and filter work. The chained audit path cut it by about 75%.
 4. A program whose GPU goes `Offline` is resubmitted once on another path; programs are idempotent by construction, so a retry is safe.
 5. Every `Host` result carries a CRC computed on the GPU and verified on the receiving core.
 
@@ -296,6 +302,7 @@ The spec was drafted for a single workspace with a ledger demo and three track b
 
 10. **Hardware and adaptability (later on 21 Nov 2026).** The Ryzen desktop is a Ryzen 7 5700X with a Radeon RX 7800 XT, not an AM5 board with an RX 570; hardware details moved to `docs/machines.md`. Added [Adapting to new hardware](#adapting-to-new-hardware) and R9: placement and CPU fallback come from measured values, and link speed is a recorded test variable. Faster networking is deferred, not dropped.
 11. **Dell hardware (later on 21 Nov 2026).** The Dell is a PowerEdge R440 with two 12-core Xeon Silver 4214 CPUs (24 cores, not 20) and 160 GB of ECC memory split 96/64 GB between sockets. The 20-core stage split is kept as the starting guest size, leaving 4 cores to Proxmox, and the memory imbalance is added as a risk.
+12. **CPU time is the placement goal (22 Nov 2026).** Evan decided after the M5 Ryzen results. The scheduler places work to save CPU time on stage cores, not to minimise latency (scheduler rule 3). It uses the atlas CPU-time crossover. Stage cores never wait on the GPU, and the GPU path's own CPU work stays on housekeeping cores.
 
 ## Sources
 
