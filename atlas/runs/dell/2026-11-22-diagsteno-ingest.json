@@ -1,0 +1,83 @@
+{
+  "kind": "diagsteno-ingest",
+  "milestone": "M7",
+  "date": "2026-11-22",
+  "purpose": "M7 gate: ingest holds the target channel count and sample rate with no dropped samples; recorded dataset replays with features equal to the CPU reference",
+  "machine": {
+    "name": "dell",
+    "host": "Dell PowerEdge R440, 2x Intel Xeon Silver 4214, Proxmox VE 9.2.21 (kernel 7.0.14-25-pve)",
+    "guest": "KVM guest, 24 vCPUs (2 sockets x 12 cores, 1 thread per core), 2 NUMA nodes (30372 MB and 31510 MB), host CPU type",
+    "host_memory_per_node": "CPU 1: 3x 32 GB DIMMs (96 GB); CPU 2: 2x 32 GB DIMMs (64 GB); DDR4-2400",
+    "pinning": "none for this run: both processes unpinned"
+  },
+  "os": "Ubuntu 26.04.1 LTS",
+  "kernel": "7.0.0-43-generic",
+  "rust": "rustc 1.95.0 (59807616e 2026-04-14), release profile",
+  "gpu": "none",
+  "gpu_driver": "n/a",
+  "wgpu_backend": "n/a: bytelanes CPU reference backend (CpuBackend)",
+  "gpu_host_link": "n/a",
+  "network": "loopback (127.0.0.1); sender and ingest on the same guest",
+  "storage": "store on ext4 (relatime) on LVM on a QEMU virtual disk (write cache: write back), backed by a ZFS pool of 4x WD Blue SA510 SATA SSDs (no power-loss protection) behind a PERC H730P on the host; ZFS sync setting not checked from the guest",
+  "storage_probe": "1 MiB write + fsync, 40 runs: p50 84.9 ms, p90 104.8 ms, max 190.1 ms (python3 os.fsync loop, same filesystem, same day)",
+  "commits": {
+    "diagsteno": "da0cbb87a003ca6c795a84a82cd333f1ded2b092 (branch m7-ingest-features)",
+    "bytelanes": "9bf712176d474cff261a69f89e232da58f4a9cc5 (branch m7-fft)"
+  },
+  "commands": [
+    "cargo build --release -p diagsteno",
+    "target/release/diagsteno ingest --store ~/.cache/m7-gate/store --listen 127.0.0.1:7615 --connections 1",
+    "target/release/diagsteno send --to 127.0.0.1:7615 --seed 2026 --seconds 60 --realtime",
+    "target/release/diagsteno check-store --store ~/.cache/m7-gate/store",
+    "target/release/diagsteno synth --out ~/.cache/m7-gate/ds-2026-60s.bin --seed 2026 --seconds 60",
+    "target/release/diagsteno replay --dataset ~/.cache/m7-gate/ds-2026-60s.bin"
+  ],
+  "layout": "default: channels 0-31 accelerometer at 25,600 Hz (16-bit), channels 32-63 strain gauge at 1,000 Hz (24-bit); 10 ms ticks; 851,200 samples/s",
+  "dataset_sha256": "8302a7934dd3d3dbcc606b41cc8d28b45150494f7b23a7047e3466d60b20c98f",
+  "send": {
+    "ack_delay_us": {
+      "max": 9601626,
+      "p50": 288950,
+      "p99": 9161623
+    },
+    "all_frames_acked": true,
+    "error": null,
+    "frames": 384000,
+    "late_ticks": 0,
+    "realtime": true,
+    "samples": 51072000,
+    "send_s": 59.99769958,
+    "sent_samples_per_second": 851232.6365430292,
+    "ticks": 6000,
+    "until_last_ack_s": 62.824387915
+  },
+  "ingest": {
+    "batches": 174,
+    "duplicate_frames": 0,
+    "feature_rows": 13856,
+    "features_ms": 3651,
+    "frames": 384000,
+    "max_flush_ms": 8666,
+    "missing_frames": 0,
+    "missing_samples": 0,
+    "put_features_ms": 15240,
+    "put_samples_ms": 45002,
+    "samples": 51072000,
+    "unknown_channel_frames": 0,
+    "window_gaps": 0
+  },
+  "check_store": {
+    "channels": 64,
+    "duplicate_frames": 0,
+    "feature_rows": 13856,
+    "missing_frames": 0,
+    "sample_frames": 384000
+  },
+  "replay": {
+    "features_differ": 0,
+    "features_equal_reference": 13856,
+    "frames": 384000,
+    "window_gaps": 0,
+    "windows": 13856
+  }
+}
