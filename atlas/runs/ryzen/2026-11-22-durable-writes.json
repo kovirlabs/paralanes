@@ -1,0 +1,274 @@
+{
+  "kind": "durable batch writes: one syscall per chunk + flush vs one IoRing submission (item 5, docs/cpu-throughput-strategy.md §11)",
+  "date": "2026-11-22",
+  "machine": "ryzen: AMD Ryzen 7 5700X, 32 GB DDR4-3200, bare metal",
+  "os": "Microsoft Windows 11 Home 10.0.26300 build 26300",
+  "power_plan": "Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)",
+  "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "storage": "scratch directory on C:, NTFS, WD_BLACK SN770 1TB (NVMe, firmware 731030WD), no power-loss protection",
+  "method": "per shape (K chunks of 64 KiB), 100 batches appended to one file, each batch flushed to the device before the next; each method run twice, alternating; file contents verified after each run. std = seek + write_all per chunk + sync_data; durable-writer = stagelanes_arch::DurableWriter (IoRing: all writes + a flush with DRAIN_PRECEDING_OPS in one submission)",
+  "commits": {
+    "paralanes": "5cb414f95447d3f52dd1148f55877dddfa68759a",
+    "stagelanes": "41a9fc7f19b4c2a2f64ecfda8ad0ad2608567c36"
+  },
+  "command": "durable-writes.exe <scratch> 100",
+  "note": "GitHub Actions runner stopped",
+  "results": [
+    {
+      "batch_bytes": 65536,
+      "batches": 100,
+      "chunks_per_batch": 1,
+      "contents_verified": true,
+      "implementation": "std write+sync_data",
+      "latency_ms": {
+        "max": 0.9124,
+        "p50": 0.2673,
+        "p90": 0.34299999999999997,
+        "p99": 0.7958999999999999
+      },
+      "method": "std",
+      "process_cpu_us_per_batch": 0.0,
+      "thread_cpu_us_per_batch": 0.0
+    },
+    {
+      "batch_bytes": 65536,
+      "batches": 100,
+      "chunks_per_batch": 1,
+      "contents_verified": true,
+      "implementation": "ioring",
+      "latency_ms": {
+        "max": 1.0026,
+        "p50": 0.31070000000000003,
+        "p90": 0.5148,
+        "p99": 0.8312
+      },
+      "method": "durable-writer",
+      "process_cpu_us_per_batch": 156.25,
+      "thread_cpu_us_per_batch": 156.25
+    },
+    {
+      "batch_bytes": 65536,
+      "batches": 100,
+      "chunks_per_batch": 1,
+      "contents_verified": true,
+      "implementation": "std write+sync_data",
+      "latency_ms": {
+        "max": 0.8959,
+        "p50": 0.4411,
+        "p90": 0.5643999999999999,
+        "p99": 0.6968
+      },
+      "method": "std",
+      "process_cpu_us_per_batch": 156.25,
+      "thread_cpu_us_per_batch": 156.25
+    },
+    {
+      "batch_bytes": 65536,
+      "batches": 100,
+      "chunks_per_batch": 1,
+      "contents_verified": true,
+      "implementation": "ioring",
+      "latency_ms": {
+        "max": 0.7699,
+        "p50": 0.28659999999999997,
+        "p90": 0.5472,
+        "p99": 0.7538
+      },
+      "method": "durable-writer",
+      "process_cpu_us_per_batch": 312.5,
+      "thread_cpu_us_per_batch": 312.5
+    },
+    {
+      "batch_bytes": 524288,
+      "batches": 100,
+      "chunks_per_batch": 8,
+      "contents_verified": true,
+      "implementation": "std write+sync_data",
+      "latency_ms": {
+        "max": 2.4019000000000004,
+        "p50": 0.5892999999999999,
+        "p90": 1.2061000000000002,
+        "p99": 2.0293
+      },
+      "method": "std",
+      "process_cpu_us_per_batch": 0.0,
+      "thread_cpu_us_per_batch": 0.0
+    },
+    {
+      "batch_bytes": 524288,
+      "batches": 100,
+      "chunks_per_batch": 8,
+      "contents_verified": true,
+      "implementation": "ioring",
+      "latency_ms": {
+        "max": 1.8661,
+        "p50": 0.6232,
+        "p90": 1.3236,
+        "p99": 1.7424000000000002
+      },
+      "method": "durable-writer",
+      "process_cpu_us_per_batch": 156.25,
+      "thread_cpu_us_per_batch": 156.25
+    },
+    {
+      "batch_bytes": 524288,
+      "batches": 100,
+      "chunks_per_batch": 8,
+      "contents_verified": true,
+      "implementation": "std write+sync_data",
+      "latency_ms": {
+        "max": 2.3862,
+        "p50": 0.5886,
+        "p90": 1.1634,
+        "p99": 1.2909
+      },
+      "method": "std",
+      "process_cpu_us_per_batch": 312.5,
+      "thread_cpu_us_per_batch": 312.5
+    },
+    {
+      "batch_bytes": 524288,
+      "batches": 100,
+      "chunks_per_batch": 8,
+      "contents_verified": true,
+      "implementation": "ioring",
+      "latency_ms": {
+        "max": 2.5904000000000003,
+        "p50": 0.5882,
+        "p90": 1.2431,
+        "p99": 2.5429
+      },
+      "method": "durable-writer",
+      "process_cpu_us_per_batch": 468.75,
+      "thread_cpu_us_per_batch": 468.75
+    },
+    {
+      "batch_bytes": 2097152,
+      "batches": 100,
+      "chunks_per_batch": 32,
+      "contents_verified": true,
+      "implementation": "std write+sync_data",
+      "latency_ms": {
+        "max": 6.1066,
+        "p50": 1.6743999999999999,
+        "p90": 2.9118,
+        "p99": 4.0635
+      },
+      "method": "std",
+      "process_cpu_us_per_batch": 937.5,
+      "thread_cpu_us_per_batch": 937.5
+    },
+    {
+      "batch_bytes": 2097152,
+      "batches": 100,
+      "chunks_per_batch": 32,
+      "contents_verified": true,
+      "implementation": "ioring",
+      "latency_ms": {
+        "max": 4.3598,
+        "p50": 1.6366,
+        "p90": 2.6879999999999997,
+        "p99": 3.8857000000000004
+      },
+      "method": "durable-writer",
+      "process_cpu_us_per_batch": 937.5,
+      "thread_cpu_us_per_batch": 937.5
+    },
+    {
+      "batch_bytes": 2097152,
+      "batches": 100,
+      "chunks_per_batch": 32,
+      "contents_verified": true,
+      "implementation": "std write+sync_data",
+      "latency_ms": {
+        "max": 3.5917000000000003,
+        "p50": 1.5433000000000001,
+        "p90": 1.8928,
+        "p99": 3.2973999999999997
+      },
+      "method": "std",
+      "process_cpu_us_per_batch": 625.0,
+      "thread_cpu_us_per_batch": 625.0
+    },
+    {
+      "batch_bytes": 2097152,
+      "batches": 100,
+      "chunks_per_batch": 32,
+      "contents_verified": true,
+      "implementation": "ioring",
+      "latency_ms": {
+        "max": 2.1713,
+        "p50": 1.5759999999999998,
+        "p90": 1.8473000000000002,
+        "p99": 2.1062
+      },
+      "method": "durable-writer",
+      "process_cpu_us_per_batch": 937.5,
+      "thread_cpu_us_per_batch": 937.5
+    },
+    {
+      "batch_bytes": 8388608,
+      "batches": 100,
+      "chunks_per_batch": 128,
+      "contents_verified": true,
+      "implementation": "std write+sync_data",
+      "latency_ms": {
+        "max": 16.5732,
+        "p50": 7.0233,
+        "p90": 10.111500000000001,
+        "p99": 12.6068
+      },
+      "method": "std",
+      "process_cpu_us_per_batch": 2343.75,
+      "thread_cpu_us_per_batch": 2343.75
+    },
+    {
+      "batch_bytes": 8388608,
+      "batches": 100,
+      "chunks_per_batch": 128,
+      "contents_verified": true,
+      "implementation": "ioring",
+      "latency_ms": {
+        "max": 15.7623,
+        "p50": 7.197699999999999,
+        "p90": 10.5,
+        "p99": 15.2018
+      },
+      "method": "durable-writer",
+      "process_cpu_us_per_batch": 2968.75,
+      "thread_cpu_us_per_batch": 2968.75
+    },
+    {
+      "batch_bytes": 8388608,
+      "batches": 100,
+      "chunks_per_batch": 128,
+      "contents_verified": true,
+      "implementation": "std write+sync_data",
+      "latency_ms": {
+        "max": 16.472,
+        "p50": 6.8896,
+        "p90": 10.637,
+        "p99": 13.7372
+      },
+      "method": "std",
+      "process_cpu_us_per_batch": 2968.75,
+      "thread_cpu_us_per_batch": 2968.75
+    },
+    {
+      "batch_bytes": 8388608,
+      "batches": 100,
+      "chunks_per_batch": 128,
+      "contents_verified": true,
+      "implementation": "ioring",
+      "latency_ms": {
+        "max": 16.3219,
+        "p50": 6.0009,
+        "p90": 11.9238,
+        "p99": 15.652
+      },
+      "method": "durable-writer",
+      "process_cpu_us_per_batch": 2656.25,
+      "thread_cpu_us_per_batch": 2656.25
+    }
+  ]
+}

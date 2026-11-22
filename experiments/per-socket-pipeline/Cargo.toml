@@ -11,6 +11,8 @@ publish = false
 
 [dependencies]
 bytelanes = { path = "../../../bytelanes/crates/bytelanes" }
+bytelanes-wgpu = { path = "../../../bytelanes/crates/bytelanes-wgpu" }
+cpu-time = "1.0.0"
 diagsteno = { path = "../../../diagsteno/crates/diagsteno" }
 diagsteno-store = { path = "../../../diagsteno/crates/diagsteno-store" }
 stagelanes-arch = { path = "../../../stagelanes/crates/stagelanes-arch" }

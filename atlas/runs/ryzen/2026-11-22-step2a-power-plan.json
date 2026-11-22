@@ -1,0 +1,1002 @@
+{
+  "kind": "CPU throughput strategy, benchmark step 2 (2a-ultimate-performance), docs/cpu-throughput-strategy.md §9, Windows form",
+  "date": "2026-11-22",
+  "machine": "ryzen: AMD Ryzen 7 5700X 8-Core Processor, 32 GB DDR4-3200, Gigabyte A520I AC; one socket, one NUMA node; bare metal (no VM)",
+  "os": "Microsoft Windows 11 Home 10.0.26300 build 26300",
+  "power_plan": "Power Scheme GUID: 637f476c-9dc8-4d6f-bbb8-8dd400640a74  (Ultimate Performance)",
+  "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "gpu": "not used by this run",
+  "network": "loopback (127.0.0.1); sender and ingest on the same machine",
+  "store": "C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp on WD_BLACK SN770 1TB (NVMe, firmware 731030WD); NTFS. The Dell's step-1 run used /dev/shm (memory), so store latency is not comparable; the interrupt and compute metrics are",
+  "os_settings": "step 2a (one layer): Ultimate Performance power plan (duplicated from e9a42b02-d5df-448d-aa00-03f14749eb61); otherwise as step 1: no CPU sets, normal thread priority, default interrupt affinity; GitHub Actions runner stopped",
+  "core_plan": "one shard (single socket), the full 64-channel layout; one logical CPU per physical core (first SMT thread): core 0 housekeeping (occupancy monitor), 1 ingest, 2 store, 3-6 feature workers, 7 sender. Pipeline CPUs are OS CPUs 2,4,6,8,10,12; SMT siblings unused by the pipeline",
+  "metrics": "as the Dell step-1 run (latency_us, ring_occupancy), except interrupts: Windows Processor counters via typeperf sampled every 1 s during the run (Interrupts/sec includes the clock; there is no separate local-timer count), plus DPCs Queued/sec, % DPC Time and % Interrupt Time",
+  "commits": {
+    "paralanes": "c99b7081bfa73251f3de0607fe08e495e713eaf1 (uncommitted changes)",
+    "stagelanes": "1b297f3e46426b00f11e770ce9ca966cb88c3af9",
+    "diagsteno": "5adcc09992f1c9baf6651a43eadbde62721d52cb",
+    "bytelanes": "337592f375662050557c67b51e30da012490f4e4"
+  },
+  "commands": [
+    "per-socket-pipeline.exe --layout step-metrics --store-dir C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp --seconds 60 --workers 4 --realtime",
+    "per-socket-pipeline.exe --layout step-metrics --store-dir C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp --seconds 60 --workers 4 --realtime",
+    "per-socket-pipeline.exe --layout step-metrics --store-dir C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp --seconds 60 --workers 4 --realtime",
+    "per-socket-pipeline.exe --layout step-metrics --store-dir C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp --seconds 60 --workers 4",
+    "per-socket-pipeline.exe --layout step-metrics --store-dir C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp --seconds 60 --workers 4",
+    "per-socket-pipeline.exe --layout step-metrics --store-dir C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp --seconds 60 --workers 4"
+  ],
+  "results": [
+    {
+      "rep": 1,
+      "mode": "realtime",
+      "layout": "step-metrics",
+      "seconds_of_data": 60,
+      "store_dir": "C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp",
+      "workers_per_shard": 4,
+      "result": {
+        "dpc_time_pct": {
+          "other_cores": 0.1,
+          "pipeline_cores": 0.0
+        },
+        "dpc_time_pct_by_cpu": {
+          "cpu00": 0.9,
+          "cpu01": 0.0,
+          "cpu02": 0.0,
+          "cpu03": 0.0,
+          "cpu04": 0.1,
+          "cpu05": 0.0,
+          "cpu06": 0.0,
+          "cpu07": 0.0,
+          "cpu08": 0.0,
+          "cpu09": 0.0,
+          "cpu10": 0.0,
+          "cpu11": 0.0,
+          "cpu12": 0.1,
+          "cpu13": 0.0,
+          "cpu14": 0.0,
+          "cpu15": 0.0
+        },
+        "dpcs_queued_per_cpu_per_s": {
+          "other_cores": 58.4,
+          "pipeline_cores": 89.2
+        },
+        "dpcs_queued_per_s_by_cpu": {
+          "cpu00": 383.9,
+          "cpu01": 16.7,
+          "cpu02": 44.6,
+          "cpu03": 38.0,
+          "cpu04": 142.3,
+          "cpu05": 9.4,
+          "cpu06": 70.1,
+          "cpu07": 3.8,
+          "cpu08": 77.5,
+          "cpu09": 6.1,
+          "cpu10": 77.2,
+          "cpu11": 6.5,
+          "cpu12": 123.5,
+          "cpu13": 6.9,
+          "cpu14": 94.3,
+          "cpu15": 18.1
+        },
+        "elapsed_s": 60.0016827,
+        "errors": [],
+        "frames": 384000,
+        "interrupt_time_pct": {
+          "other_cores": 0.1,
+          "pipeline_cores": 0.0
+        },
+        "interrupt_time_pct_by_cpu": {
+          "cpu00": 0.5,
+          "cpu01": 0.0,
+          "cpu02": 0.1,
+          "cpu03": 0.1,
+          "cpu04": 0.0,
+          "cpu05": 0.1,
+          "cpu06": 0.0,
+          "cpu07": 0.0,
+          "cpu08": 0.0,
+          "cpu09": 0.2,
+          "cpu10": 0.0,
+          "cpu11": 0.0,
+          "cpu12": 0.1,
+          "cpu13": 0.1,
+          "cpu14": 0.1,
+          "cpu15": 0.1
+        },
+        "interrupts_per_cpu_per_s": {
+          "other_cores_all": 823.7,
+          "other_cores_local_timer": null,
+          "pipeline_cores_all": 693.6,
+          "pipeline_cores_local_timer": null
+        },
+        "interrupts_per_s_by_cpu": {
+          "cpu00": 2550.6,
+          "cpu01": 584.4,
+          "cpu02": 1068.2,
+          "cpu03": 689.5,
+          "cpu04": 684.5,
+          "cpu05": 559.4,
+          "cpu06": 602.4,
+          "cpu07": 541.5,
+          "cpu08": 603.1,
+          "cpu09": 548.4,
+          "cpu10": 601.0,
+          "cpu11": 552.6,
+          "cpu12": 602.3,
+          "cpu13": 546.5,
+          "cpu14": 1001.0,
+          "cpu15": 663.0
+        },
+        "late_ticks": 6,
+        "latency_us": {
+          "ingest_to_ack": {
+            "max": 110147,
+            "n": 384000,
+            "p50": 55474,
+            "p99": 106268,
+            "p99_9": 108102
+          },
+          "ingest_to_feature_worker": {
+            "max": 110150,
+            "n": 384000,
+            "p50": 55722,
+            "p99": 106272,
+            "p99_9": 108103
+          },
+          "ring_transit_ingest_to_store": {
+            "max": 4417,
+            "n": 384000,
+            "p50": 0,
+            "p99": 2594,
+            "p99_9": 3959
+          },
+          "window_compute": {
+            "max": 755,
+            "n": 13856,
+            "p50": 78,
+            "p99": 121,
+            "p99_9": 360
+          }
+        },
+        "pipeline_cpus": [
+          2,
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "realtime": true,
+        "ring_occupancy": {
+          "ingest_to_store_max_over_shards": {
+            "max": 64,
+            "n": 39988,
+            "p50": 0,
+            "p99": 0,
+            "p99_9": 64
+          },
+          "store_to_worker_max_over_workers": {
+            "max": 185,
+            "n": 39988,
+            "p50": 0,
+            "p99": 0,
+            "p99_9": 121
+          }
+        },
+        "samples": 60,
+        "source": "typeperf Processor counters, sampled every 1 s during the run",
+        "windows": 13856
+      }
+    },
+    {
+      "rep": 2,
+      "mode": "realtime",
+      "layout": "step-metrics",
+      "seconds_of_data": 60,
+      "store_dir": "C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp",
+      "workers_per_shard": 4,
+      "result": {
+        "dpc_time_pct": {
+          "other_cores": 0.1,
+          "pipeline_cores": 0.1
+        },
+        "dpc_time_pct_by_cpu": {
+          "cpu00": 1.0,
+          "cpu01": 0.0,
+          "cpu02": 0.1,
+          "cpu03": 0.0,
+          "cpu04": 0.1,
+          "cpu05": 0.0,
+          "cpu06": 0.0,
+          "cpu07": 0.0,
+          "cpu08": 0.0,
+          "cpu09": 0.0,
+          "cpu10": 0.1,
+          "cpu11": 0.0,
+          "cpu12": 0.1,
+          "cpu13": 0.0,
+          "cpu14": 0.0,
+          "cpu15": 0.0
+        },
+        "dpcs_queued_per_cpu_per_s": {
+          "other_cores": 59.9,
+          "pipeline_cores": 90.6
+        },
+        "dpcs_queued_per_s_by_cpu": {
+          "cpu00": 410.1,
+          "cpu01": 15.5,
+          "cpu02": 56.7,
+          "cpu03": 43.8,
+          "cpu04": 144.7,
+          "cpu05": 7.9,
+          "cpu06": 70.3,
+          "cpu07": 3.1,
+          "cpu08": 78.3,
+          "cpu09": 5.8,
+          "cpu10": 70.5,
+          "cpu11": 6.9,
+          "cpu12": 122.9,
+          "cpu13": 5.1,
+          "cpu14": 75.5,
+          "cpu15": 25.6
+        },
+        "elapsed_s": 60.0015287,
+        "errors": [],
+        "frames": 384000,
+        "interrupt_time_pct": {
+          "other_cores": 0.1,
+          "pipeline_cores": 0.1
+        },
+        "interrupt_time_pct_by_cpu": {
+          "cpu00": 0.4,
+          "cpu01": 0.1,
+          "cpu02": 0.2,
+          "cpu03": 0.1,
+          "cpu04": 0.1,
+          "cpu05": 0.1,
+          "cpu06": 0.1,
+          "cpu07": 0.2,
+          "cpu08": 0.0,
+          "cpu09": 0.1,
+          "cpu10": 0.1,
+          "cpu11": 0.1,
+          "cpu12": 0.1,
+          "cpu13": 0.1,
+          "cpu14": 0.1,
+          "cpu15": 0.1
+        },
+        "interrupts_per_cpu_per_s": {
+          "other_cores_all": 820.1,
+          "other_cores_local_timer": null,
+          "pipeline_cores_all": 696.3,
+          "pipeline_cores_local_timer": null
+        },
+        "interrupts_per_s_by_cpu": {
+          "cpu00": 2538.3,
+          "cpu01": 587.6,
+          "cpu02": 1080.1,
+          "cpu03": 685.9,
+          "cpu04": 687.5,
+          "cpu05": 556.8,
+          "cpu06": 603.7,
+          "cpu07": 538.3,
+          "cpu08": 603.2,
+          "cpu09": 551.4,
+          "cpu10": 599.9,
+          "cpu11": 552.4,
+          "cpu12": 603.6,
+          "cpu13": 541.1,
+          "cpu14": 998.5,
+          "cpu15": 650.8
+        },
+        "late_ticks": 7,
+        "latency_us": {
+          "ingest_to_ack": {
+            "max": 108559,
+            "n": 384000,
+            "p50": 55569,
+            "p99": 106371,
+            "p99_9": 107977
+          },
+          "ingest_to_feature_worker": {
+            "max": 108808,
+            "n": 384000,
+            "p50": 55951,
+            "p99": 106432,
+            "p99_9": 107978
+          },
+          "ring_transit_ingest_to_store": {
+            "max": 4416,
+            "n": 384000,
+            "p50": 0,
+            "p99": 2650,
+            "p99_9": 3877
+          },
+          "window_compute": {
+            "max": 551,
+            "n": 13856,
+            "p50": 79,
+            "p99": 124,
+            "p99_9": 420
+          }
+        },
+        "pipeline_cpus": [
+          2,
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "realtime": true,
+        "ring_occupancy": {
+          "ingest_to_store_max_over_shards": {
+            "max": 64,
+            "n": 39486,
+            "p50": 0,
+            "p99": 0,
+            "p99_9": 64
+          },
+          "store_to_worker_max_over_workers": {
+            "max": 175,
+            "n": 39486,
+            "p50": 0,
+            "p99": 0,
+            "p99_9": 105
+          }
+        },
+        "samples": 60,
+        "source": "typeperf Processor counters, sampled every 1 s during the run",
+        "windows": 13856
+      }
+    },
+    {
+      "rep": 3,
+      "mode": "realtime",
+      "layout": "step-metrics",
+      "seconds_of_data": 60,
+      "store_dir": "C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp",
+      "workers_per_shard": 4,
+      "result": {
+        "dpc_time_pct": {
+          "other_cores": 0.1,
+          "pipeline_cores": 0.0
+        },
+        "dpc_time_pct_by_cpu": {
+          "cpu00": 0.7,
+          "cpu01": 0.0,
+          "cpu02": 0.0,
+          "cpu03": 0.0,
+          "cpu04": 0.0,
+          "cpu05": 0.0,
+          "cpu06": 0.0,
+          "cpu07": 0.0,
+          "cpu08": 0.1,
+          "cpu09": 0.0,
+          "cpu10": 0.0,
+          "cpu11": 0.0,
+          "cpu12": 0.0,
+          "cpu13": 0.0,
+          "cpu14": 0.0,
+          "cpu15": 0.0
+        },
+        "dpcs_queued_per_cpu_per_s": {
+          "other_cores": 55.2,
+          "pipeline_cores": 89.5
+        },
+        "dpcs_queued_per_s_by_cpu": {
+          "cpu00": 364.7,
+          "cpu01": 19.8,
+          "cpu02": 51.7,
+          "cpu03": 41.0,
+          "cpu04": 146.9,
+          "cpu05": 9.0,
+          "cpu06": 69.1,
+          "cpu07": 8.4,
+          "cpu08": 76.8,
+          "cpu09": 2.9,
+          "cpu10": 69.3,
+          "cpu11": 6.8,
+          "cpu12": 123.4,
+          "cpu13": 7.2,
+          "cpu14": 76.1,
+          "cpu15": 16.3
+        },
+        "elapsed_s": 60.0001985,
+        "errors": [],
+        "frames": 384000,
+        "interrupt_time_pct": {
+          "other_cores": 0.1,
+          "pipeline_cores": 0.1
+        },
+        "interrupt_time_pct_by_cpu": {
+          "cpu00": 0.4,
+          "cpu01": 0.1,
+          "cpu02": 0.1,
+          "cpu03": 0.1,
+          "cpu04": 0.2,
+          "cpu05": 0.1,
+          "cpu06": 0.0,
+          "cpu07": 0.1,
+          "cpu08": 0.0,
+          "cpu09": 0.1,
+          "cpu10": 0.1,
+          "cpu11": 0.1,
+          "cpu12": 0.1,
+          "cpu13": 0.0,
+          "cpu14": 0.1,
+          "cpu15": 0.1
+        },
+        "interrupts_per_cpu_per_s": {
+          "other_cores_all": 808.8,
+          "other_cores_local_timer": null,
+          "pipeline_cores_all": 686.2,
+          "pipeline_cores_local_timer": null
+        },
+        "interrupts_per_s_by_cpu": {
+          "cpu00": 2483.5,
+          "cpu01": 586.7,
+          "cpu02": 1017.2,
+          "cpu03": 678.8,
+          "cpu04": 690.0,
+          "cpu05": 555.9,
+          "cpu06": 603.1,
+          "cpu07": 539.0,
+          "cpu08": 603.3,
+          "cpu09": 535.7,
+          "cpu10": 600.5,
+          "cpu11": 550.4,
+          "cpu12": 603.1,
+          "cpu13": 545.2,
+          "cpu14": 962.8,
+          "cpu15": 649.6
+        },
+        "late_ticks": 6,
+        "latency_us": {
+          "ingest_to_ack": {
+            "max": 108694,
+            "n": 384000,
+            "p50": 55798,
+            "p99": 106467,
+            "p99_9": 108091
+          },
+          "ingest_to_feature_worker": {
+            "max": 108695,
+            "n": 384000,
+            "p50": 55962,
+            "p99": 106577,
+            "p99_9": 108104
+          },
+          "ring_transit_ingest_to_store": {
+            "max": 4454,
+            "n": 384000,
+            "p50": 0,
+            "p99": 2745,
+            "p99_9": 3785
+          },
+          "window_compute": {
+            "max": 476,
+            "n": 13856,
+            "p50": 78,
+            "p99": 125,
+            "p99_9": 418
+          }
+        },
+        "pipeline_cpus": [
+          2,
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "realtime": true,
+        "ring_occupancy": {
+          "ingest_to_store_max_over_shards": {
+            "max": 64,
+            "n": 39644,
+            "p50": 0,
+            "p99": 0,
+            "p99_9": 64
+          },
+          "store_to_worker_max_over_workers": {
+            "max": 175,
+            "n": 39644,
+            "p50": 0,
+            "p99": 0,
+            "p99_9": 117
+          }
+        },
+        "samples": 61,
+        "source": "typeperf Processor counters, sampled every 1 s during the run",
+        "windows": 13856
+      }
+    },
+    {
+      "rep": 1,
+      "mode": "unpaced",
+      "layout": "step-metrics",
+      "seconds_of_data": 60,
+      "store_dir": "C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp",
+      "workers_per_shard": 4,
+      "result": {
+        "dpc_time_pct": {
+          "other_cores": 0.2,
+          "pipeline_cores": 0.0
+        },
+        "dpc_time_pct_by_cpu": {
+          "cpu00": 1.0,
+          "cpu01": 0.0,
+          "cpu02": 0.0,
+          "cpu03": 0.0,
+          "cpu04": 0.0,
+          "cpu05": 0.0,
+          "cpu06": 0.0,
+          "cpu07": 0.0,
+          "cpu08": 0.0,
+          "cpu09": 0.0,
+          "cpu10": 0.0,
+          "cpu11": 0.5,
+          "cpu12": 0.0,
+          "cpu13": 0.0,
+          "cpu14": 0.0,
+          "cpu15": 0.5
+        },
+        "dpcs_queued_per_cpu_per_s": {
+          "other_cores": 125.1,
+          "pipeline_cores": 120.6
+        },
+        "dpcs_queued_per_s_by_cpu": {
+          "cpu00": 476.8,
+          "cpu01": 106.8,
+          "cpu02": 85.5,
+          "cpu03": 62.8,
+          "cpu04": 332.0,
+          "cpu05": 68.5,
+          "cpu06": 52.2,
+          "cpu07": 87.2,
+          "cpu08": 69.8,
+          "cpu09": 44.6,
+          "cpu10": 73.2,
+          "cpu11": 60.9,
+          "cpu12": 110.7,
+          "cpu13": 41.5,
+          "cpu14": 200.2,
+          "cpu15": 101.8
+        },
+        "elapsed_s": 1.6866503000000002,
+        "errors": [],
+        "frames": 384000,
+        "interrupt_time_pct": {
+          "other_cores": 0.0,
+          "pipeline_cores": 0.0
+        },
+        "interrupt_time_pct_by_cpu": {
+          "cpu00": 0.0,
+          "cpu01": 0.0,
+          "cpu02": 0.0,
+          "cpu03": 0.0,
+          "cpu04": 0.0,
+          "cpu05": 0.0,
+          "cpu06": 0.0,
+          "cpu07": 0.0,
+          "cpu08": 0.0,
+          "cpu09": 0.0,
+          "cpu10": 0.0,
+          "cpu11": 0.0,
+          "cpu12": 0.0,
+          "cpu13": 0.0,
+          "cpu14": 0.0,
+          "cpu15": 0.0
+        },
+        "interrupts_per_cpu_per_s": {
+          "other_cores_all": 934.7,
+          "other_cores_local_timer": null,
+          "pipeline_cores_all": 915.5,
+          "pipeline_cores_local_timer": null
+        },
+        "interrupts_per_s_by_cpu": {
+          "cpu00": 2588.0,
+          "cpu01": 763.9,
+          "cpu02": 1405.7,
+          "cpu03": 701.4,
+          "cpu04": 1317.1,
+          "cpu05": 712.4,
+          "cpu06": 690.3,
+          "cpu07": 634.9,
+          "cpu08": 693.3,
+          "cpu09": 655.5,
+          "cpu10": 678.7,
+          "cpu11": 693.6,
+          "cpu12": 707.9,
+          "cpu13": 640.2,
+          "cpu14": 1146.7,
+          "cpu15": 810.1
+        },
+        "late_ticks": 0,
+        "latency_us": {
+          "ingest_to_ack": {
+            "max": 90974,
+            "n": 384000,
+            "p50": 52447,
+            "p99": 88670,
+            "p99_9": 90643
+          },
+          "ingest_to_feature_worker": {
+            "max": 92498,
+            "n": 384000,
+            "p50": 60540,
+            "p99": 91735,
+            "p99_9": 92336
+          },
+          "ring_transit_ingest_to_store": {
+            "max": 53976,
+            "n": 384000,
+            "p50": 115,
+            "p99": 52382,
+            "p99_9": 53887
+          },
+          "window_compute": {
+            "max": 1620,
+            "n": 13856,
+            "p50": 81,
+            "p99": 344,
+            "p99_9": 761
+          }
+        },
+        "pipeline_cpus": [
+          2,
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "realtime": false,
+        "ring_occupancy": {
+          "ingest_to_store_max_over_shards": {
+            "max": 4096,
+            "n": 2569,
+            "p50": 0,
+            "p99": 4096,
+            "p99_9": 4096
+          },
+          "store_to_worker_max_over_workers": {
+            "max": 2043,
+            "n": 2569,
+            "p50": 0,
+            "p99": 1352,
+            "p99_9": 2033
+          }
+        },
+        "samples": 3,
+        "source": "typeperf Processor counters, sampled every 1 s during the run",
+        "windows": 13856
+      }
+    },
+    {
+      "rep": 2,
+      "mode": "unpaced",
+      "layout": "step-metrics",
+      "seconds_of_data": 60,
+      "store_dir": "C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp",
+      "workers_per_shard": 4,
+      "result": {
+        "dpc_time_pct": {
+          "other_cores": 0.1,
+          "pipeline_cores": 0.0
+        },
+        "dpc_time_pct_by_cpu": {
+          "cpu00": 0.5,
+          "cpu01": 0.0,
+          "cpu02": 0.0,
+          "cpu03": 0.0,
+          "cpu04": 0.0,
+          "cpu05": 0.0,
+          "cpu06": 0.0,
+          "cpu07": 0.0,
+          "cpu08": 0.0,
+          "cpu09": 0.0,
+          "cpu10": 0.0,
+          "cpu11": 0.0,
+          "cpu12": 0.0,
+          "cpu13": 0.0,
+          "cpu14": 0.0,
+          "cpu15": 0.0
+        },
+        "dpcs_queued_per_cpu_per_s": {
+          "other_cores": 114.4,
+          "pipeline_cores": 132.4
+        },
+        "dpcs_queued_per_s_by_cpu": {
+          "cpu00": 425.5,
+          "cpu01": 141.0,
+          "cpu02": 76.3,
+          "cpu03": 49.9,
+          "cpu04": 426.9,
+          "cpu05": 83.1,
+          "cpu06": 73.7,
+          "cpu07": 45.7,
+          "cpu08": 55.8,
+          "cpu09": 32.0,
+          "cpu10": 62.3,
+          "cpu11": 55.5,
+          "cpu12": 99.6,
+          "cpu13": 41.9,
+          "cpu14": 169.6,
+          "cpu15": 99.4
+        },
+        "elapsed_s": 1.6571438,
+        "errors": [],
+        "frames": 384000,
+        "interrupt_time_pct": {
+          "other_cores": 0.2,
+          "pipeline_cores": 0.0
+        },
+        "interrupt_time_pct_by_cpu": {
+          "cpu00": 1.0,
+          "cpu01": 0.0,
+          "cpu02": 0.0,
+          "cpu03": 0.0,
+          "cpu04": 0.0,
+          "cpu05": 0.0,
+          "cpu06": 0.0,
+          "cpu07": 0.0,
+          "cpu08": 0.0,
+          "cpu09": 0.0,
+          "cpu10": 0.0,
+          "cpu11": 0.0,
+          "cpu12": 0.0,
+          "cpu13": 0.5,
+          "cpu14": 0.0,
+          "cpu15": 0.0
+        },
+        "interrupts_per_cpu_per_s": {
+          "other_cores_all": 933.6,
+          "other_cores_local_timer": null,
+          "pipeline_cores_all": 929.6,
+          "pipeline_cores_local_timer": null
+        },
+        "interrupts_per_s_by_cpu": {
+          "cpu00": 2588.9,
+          "cpu01": 813.8,
+          "cpu02": 1501.6,
+          "cpu03": 703.4,
+          "cpu04": 1354.9,
+          "cpu05": 726.5,
+          "cpu06": 689.6,
+          "cpu07": 605.1,
+          "cpu08": 675.7,
+          "cpu09": 631.4,
+          "cpu10": 671.0,
+          "cpu11": 672.4,
+          "cpu12": 684.9,
+          "cpu13": 628.8,
+          "cpu14": 1156.5,
+          "cpu15": 809.4
+        },
+        "late_ticks": 0,
+        "latency_us": {
+          "ingest_to_ack": {
+            "max": 94639,
+            "n": 384000,
+            "p50": 50733,
+            "p99": 92988,
+            "p99_9": 94477
+          },
+          "ingest_to_feature_worker": {
+            "max": 97904,
+            "n": 384000,
+            "p50": 56890,
+            "p99": 94747,
+            "p99_9": 97087
+          },
+          "ring_transit_ingest_to_store": {
+            "max": 51373,
+            "n": 384000,
+            "p50": 254,
+            "p99": 47878,
+            "p99_9": 51026
+          },
+          "window_compute": {
+            "max": 961,
+            "n": 13856,
+            "p50": 81,
+            "p99": 295,
+            "p99_9": 796
+          }
+        },
+        "pipeline_cpus": [
+          2,
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "realtime": false,
+        "ring_occupancy": {
+          "ingest_to_store_max_over_shards": {
+            "max": 4096,
+            "n": 2728,
+            "p50": 0,
+            "p99": 4096,
+            "p99_9": 4096
+          },
+          "store_to_worker_max_over_workers": {
+            "max": 2040,
+            "n": 2728,
+            "p50": 0,
+            "p99": 1533,
+            "p99_9": 2016
+          }
+        },
+        "samples": 3,
+        "source": "typeperf Processor counters, sampled every 1 s during the run",
+        "windows": 13856
+      }
+    },
+    {
+      "rep": 3,
+      "mode": "unpaced",
+      "layout": "step-metrics",
+      "seconds_of_data": 60,
+      "store_dir": "C:\\Users\\gress\\AppData\\Local\\Temp\\claude\\7b4615431ae8b377\\639b70c4-e547-4185-87e2-85f0ff5aa5fa\\scratchpad\\psp",
+      "workers_per_shard": 4,
+      "result": {
+        "dpc_time_pct": {
+          "other_cores": 0.1,
+          "pipeline_cores": 0.0
+        },
+        "dpc_time_pct_by_cpu": {
+          "cpu00": 1.0,
+          "cpu01": 0.0,
+          "cpu02": 0.0,
+          "cpu03": 0.0,
+          "cpu04": 0.0,
+          "cpu05": 0.0,
+          "cpu06": 0.0,
+          "cpu07": 0.0,
+          "cpu08": 0.0,
+          "cpu09": 0.0,
+          "cpu10": 0.0,
+          "cpu11": 0.0,
+          "cpu12": 0.0,
+          "cpu13": 0.0,
+          "cpu14": 0.0,
+          "cpu15": 0.0
+        },
+        "dpcs_queued_per_cpu_per_s": {
+          "other_cores": 198.7,
+          "pipeline_cores": 166.7
+        },
+        "dpcs_queued_per_s_by_cpu": {
+          "cpu00": 647.6,
+          "cpu01": 175.4,
+          "cpu02": 128.8,
+          "cpu03": 133.9,
+          "cpu04": 523.5,
+          "cpu05": 178.4,
+          "cpu06": 91.8,
+          "cpu07": 76.5,
+          "cpu08": 85.8,
+          "cpu09": 99.3,
+          "cpu10": 67.9,
+          "cpu11": 117.1,
+          "cpu12": 102.6,
+          "cpu13": 113.5,
+          "cpu14": 330.8,
+          "cpu15": 114.1
+        },
+        "elapsed_s": 1.7286841,
+        "errors": [],
+        "frames": 384000,
+        "interrupt_time_pct": {
+          "other_cores": 0.1,
+          "pipeline_cores": 0.1
+        },
+        "interrupt_time_pct_by_cpu": {
+          "cpu00": 0.5,
+          "cpu01": 0.0,
+          "cpu02": 0.0,
+          "cpu03": 0.0,
+          "cpu04": 0.0,
+          "cpu05": 0.0,
+          "cpu06": 0.5,
+          "cpu07": 0.0,
+          "cpu08": 0.0,
+          "cpu09": 0.0,
+          "cpu10": 0.0,
+          "cpu11": 0.0,
+          "cpu12": 0.0,
+          "cpu13": 0.0,
+          "cpu14": 0.0,
+          "cpu15": 0.0
+        },
+        "interrupts_per_cpu_per_s": {
+          "other_cores_all": 1106.1,
+          "other_cores_local_timer": null,
+          "pipeline_cores_all": 950.3,
+          "pipeline_cores_local_timer": null
+        },
+        "interrupts_per_s_by_cpu": {
+          "cpu00": 2886.6,
+          "cpu01": 958.0,
+          "cpu02": 1403.7,
+          "cpu03": 901.4,
+          "cpu04": 1541.1,
+          "cpu05": 1001.9,
+          "cpu06": 709.6,
+          "cpu07": 723.8,
+          "cpu08": 694.0,
+          "cpu09": 774.4,
+          "cpu10": 687.7,
+          "cpu11": 875.7,
+          "cpu12": 665.9,
+          "cpu13": 830.6,
+          "cpu14": 1239.8,
+          "cpu15": 868.4
+        },
+        "late_ticks": 0,
+        "latency_us": {
+          "ingest_to_ack": {
+            "max": 102658,
+            "n": 384000,
+            "p50": 51085,
+            "p99": 101383,
+            "p99_9": 102577
+          },
+          "ingest_to_feature_worker": {
+            "max": 104865,
+            "n": 384000,
+            "p50": 56991,
+            "p99": 102549,
+            "p99_9": 104318
+          },
+          "ring_transit_ingest_to_store": {
+            "max": 53000,
+            "n": 384000,
+            "p50": 1622,
+            "p99": 51780,
+            "p99_9": 52921
+          },
+          "window_compute": {
+            "max": 1297,
+            "n": 13856,
+            "p50": 82,
+            "p99": 337,
+            "p99_9": 929
+          }
+        },
+        "pipeline_cpus": [
+          2,
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "realtime": false,
+        "ring_occupancy": {
+          "ingest_to_store_max_over_shards": {
+            "max": 4096,
+            "n": 2661,
+            "p50": 0,
+            "p99": 4096,
+            "p99_9": 4096
+          },
+          "store_to_worker_max_over_workers": {
+            "max": 1978,
+            "n": 2661,
+            "p50": 0,
+            "p99": 1608,
+            "p99_9": 1968
+          }
+        },
+        "samples": 3,
+        "source": "typeperf Processor counters, sampled every 1 s during the run",
+        "windows": 13856
+      }
+    }
+  ]
+}

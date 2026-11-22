@@ -1,0 +1,11 @@
+[package]
+name = "cpuid-qos"
+description = "Probe: does this x86-64 CPU expose L3 QoS (cache allocation, monitoring) through CPUID?"
+version = "0.0.0"
+edition = "2024"
+license = "GPL-3.0-only"
+publish = false
+
+# Standalone: not part of the paralanes workspace or its CI.
+[workspace]
+
