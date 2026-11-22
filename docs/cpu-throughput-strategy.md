@@ -124,8 +124,8 @@ Rules:
 
 | Machine | Role in plan | Notes |
 |---|---|---|
-| **Dell server — dual Xeon Silver 10-core, Proxmox, no GPU** | Shared first phase; assembly-line + channel-subsystem benchmark | Best platform for isolation work: SNC, CAT/MBA (verify with `pqos -d`), DDIO, I/OAT. Run benchmarks in a Linux VM with pinned vCPUs/NUMA passthrough or directly on host; note virtualization adds IRQ noise — prefer bare-metal-like pinning or a dedicated LXC/host run for final numbers. |
-| **Ryzen 7 AM5 desktop, Windows, Radeon RX 5700** | stagelanes + paralanes testing; GPU (bytelanes) work | RX 5700 = RDNA1 (gfx1010): not officially supported by ROCm → use **Vulkan compute**. Windows limits isolation (Section 3). Optionally dual-boot/WSL2 is *not* a substitute for Linux isolation tests. Check desktop Ryzen L3 QoS support before relying on it. |
+| **Dell PowerEdge R440 — 2x Xeon Silver 4214 (12 cores each), Proxmox, no GPU, SATA SSDs only** | Shared first phase; assembly-line + channel-subsystem benchmark | Best platform for isolation work: SNC, CAT/MBA (verify with `pqos -d`), DDIO, I/OAT. Run benchmarks in a Linux VM with pinned vCPUs/NUMA passthrough or directly on host; note virtualization adds IRQ noise — prefer bare-metal-like pinning or a dedicated LXC/host run for final numbers. |
+| **Ryzen 7 5700X desktop (AM4, A520 Mini-ITX), Windows, Radeon RX 7800 XT 16 GB (PCIe 3.0 x16), M.2 NVMe SSD** | stagelanes + paralanes testing; GPU (bytelanes) work | RX 7800 XT = RDNA3; bytelanes uses wgpu (Vulkan and DX12), which reproduce the CPU reference exactly (M3). Windows limits isolation (Section 3). Optionally dual-boot/WSL2 is *not* a substitute for Linux isolation tests. Check desktop Ryzen L3 QoS support before relying on it. |
 | **MacBook Pro M5 Pro, 24 GB** | Third platform; ARM + unified memory | Unified memory removes CPU↔GPU PCIe copies — useful contrast for bytelanes design. Metal for GPU. No IRQ steering/core isolation; use for portability and ARM correctness (128-byte cache-line padding, `STNP`, memory ordering differences). |
 
 ---
@@ -153,3 +153,92 @@ Record for each run: config, ops/sec, latency percentiles, `/proc/interrupts` de
 - Shared contracts: buffer descriptor format, ownership states (free / device-owned / CPU-owned / done), ring API, and metrics schema — define these first and version them.
 - Platform-specific code (isolation setup, DMA engines, GPU backend) lives behind feature flags / traits; core pipeline logic stays portable Rust.
 - Every optimization lands with a benchmark result from Section 9, not just a claim.
+
+---
+
+## 11. Work for the Windows PC (agent B: Radeon RX 7800 XT, NVMe SSD)
+
+*Added 2026-11-22 by agent A (Dell). The platform corrections in §8 above
+follow `docs/machines.md`.*
+
+The Dell has no GPU and no NVMe, and its guest cannot use CAT, DDIO or
+I/OAT (see §12). These items need the Windows PC's GPU, NVMe SSD or
+Windows itself. Each lands with a run file, as in §9.
+
+### GPU (bytelanes-wgpu)
+1. **Benchmark step 6 (§9): the GPU stage in the pipeline.**
+   - Run diagsteno's feature stage through `Engine::new(<wgpu backend>)`
+     inside the per-socket pipeline experiment
+     (`experiments/per-socket-pipeline`), in place of the CPU reference.
+   - Record the window-batch size at which the GPU beats the CPU, end to
+     end. The FFT atlas (M5, M7) has the bare-op crossover; this is the
+     in-pipeline one.
+   - Check that features stay byte-identical to `features::reference`.
+2. **§7 transfer rules in `bytelanes-wgpu`:**
+   - pinned (page-locked) host buffers
+   - asynchronous submit and poll, so `submit` never waits
+   - double-buffering on the GPU side, so the copy of batch N+1 overlaps
+     compute on batch N
+
+   Measure each against the M5 runs.
+3. **More GPU batch work from §7, prioritised for diagsteno:** decimation and
+   RMS/peak reduction over many channels, and CRC-checked compression of
+   sample batches before storage. Fewer bytes reaching the disk is the GPU
+   help that actually targets the storage bottleneck the Dell measured.
+
+### NVMe SSD (storage path)
+4. **Durable-write latency on the NVMe.**
+   - Record the drive model and whether it has power-loss protection.
+   - Run diagsteno ingest (M7 gate command) with the store on the NVMe and
+     compare acknowledgement delay with the Dell run file
+     `atlas/runs/dell/2026-11-22-diagsteno-ingest.json`. There, flushes
+     averaged about 85 ms and stalled for up to 8.7 s.
+   - This tells us whether a fast flush device fixes the Dell's bottleneck
+     before buying one.
+5. **IoRing (Windows 11) or IOCP with batching for the store (§3):**
+   write + flush + rename submitted as one batch, the "channel program"
+   form. Compare with plain synchronous writes on the same NVMe.
+6. **DirectStorage (research, not code yet).** It moves NVMe → GPU memory
+   with GPU decompression on any DX12 GPU. It is the nearest thing to the
+   "GPU does the disk I/O" idea available on AMD. wgpu does not expose it, so
+   first report whether it can share buffers with a wgpu DX12 device.
+
+### Windows isolation (stagelanes platform code)
+7. **Benchmark step 2 (§9), Windows form:**
+   - `SetThreadSelectedCpuSets` for stage threads, raised thread priority
+   - per-device interrupt affinity (Interrupt Affinity Policy) for the NIC,
+     NVMe and GPU, steered to 1–2 housekeeping cores
+   - Ultimate Performance power plan
+
+   Measure p50/p99/p99.9 and per-core interrupt rates with the same metrics
+   as the Dell's step-1 run, so the two OSes compare directly.
+8. **`stagelanes-pipe` (M6, §5):** the assembly-line runtime itself. It is
+   built on the Ryzen per the plan, and the Dell repeats it on two sockets.
+9. **Check AMD L3 QoS on the Ryzen 7 5700X** before relying on it. Desktop
+   Zen 3 may not support it; record what Windows or the BIOS exposes.
+
+Not for the Windows PC: Linux isolation tests (WSL2 is not a substitute),
+AMD PTDMA (EPYC only), Intel CAT, DDIO and I/OAT.
+
+## 12. Where each item stands on the Dell (agent A)
+
+Checked inside the guest on 2026-11-22. The guest exposes:
+- no CAT, MBA or resctrl
+- no DMA engines and no cpuidle; the host controls C-states
+- io_uring enabled
+- 2 MB and 1 GB huge pages supported, none reserved
+- the hardware PMU visible
+
+| Item | Status on the Dell |
+| --- | --- |
+| §9 step 1 baseline with full metrics | In progress: `experiments/per-socket-pipeline` `--layout step-metrics` |
+| §9 step 2: isolcpus, nohz_full, rcu_nocbs, IRQ steering, workqueue mask | Ready. Needs root in the guest and a guest reboot (Evan) |
+| C-states and performance governor | Host only (Proxmox, Evan) |
+| Huge pages for rings and pools | Ready with root; `stagelanes-mem` supports them |
+| CAT and MBA | Host only, via `pqos` on the pinned host cores; support on the Silver 4214 must be checked with `pqos -d` |
+| io_uring linked writes and SQPOLL for the store | Buildable in the guest |
+| Non-temporal stores | Buildable, but needs `unsafe` intrinsics, so it belongs in stagelanes' `platform` modules |
+| SNC zones | Not possible now: BIOS change plus evenly populated memory controllers (today 3+2 DIMMs) |
+| NVMe IOPOLL and SPDK | Not possible: no NVMe |
+| DDIO and I/OAT | Host only, and of little value while the guest's I/O is virtualised |
+| GPU stage | Not possible: no GPU (see §11) |
