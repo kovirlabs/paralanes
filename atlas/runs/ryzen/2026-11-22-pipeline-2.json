@@ -1,0 +1,1112 @@
+{
+  "benchmark": "stagelanes-bench (M6; spec R1, R2)",
+  "build": {
+    "git": {
+      "branch": "m6-stage-pipeline",
+      "stagelanes": "685dd9e9f9063618a24991267b9a038ee45f92f2",
+      "uncommitted_changes": false
+    },
+    "profile": "release",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+  },
+  "capacity": {
+    "pipeline_items_per_s": 999588.0,
+    "pipeline_stages": [
+      {
+        "allocations_after_ready": 0,
+        "busy_polls": 1499847,
+        "bytes_touched_per_item": 8.0,
+        "cpu": "2",
+        "cpu_s": 12.203125,
+        "idle_polls": 115526119,
+        "items": 11998776,
+        "on_cpu_fraction": 0.9999432236758101,
+        "setup_errors": [],
+        "stage": "source",
+        "voluntary_context_switches": null,
+        "wall_s": 12.203817887920758
+      },
+      {
+        "allocations_after_ready": 0,
+        "busy_polls": 374963,
+        "bytes_touched_per_item": 16.0,
+        "cpu": "4",
+        "cpu_s": 12.171875,
+        "idle_polls": 11355464,
+        "items": 11998776,
+        "on_cpu_fraction": 0.9977107280669337,
+        "setup_errors": [],
+        "stage": "parse",
+        "voluntary_context_switches": null,
+        "wall_s": 12.19980366812636
+      },
+      {
+        "allocations_after_ready": 0,
+        "busy_polls": 93745,
+        "bytes_touched_per_item": 16.0,
+        "cpu": "6",
+        "cpu_s": 12.203125,
+        "idle_polls": 11484809,
+        "items": 2999694,
+        "on_cpu_fraction": 0.9999890528138978,
+        "setup_errors": [],
+        "stage": "worker0",
+        "voluntary_context_switches": null,
+        "wall_s": 12.203258591342852
+      },
+      {
+        "allocations_after_ready": 0,
+        "busy_polls": 93745,
+        "bytes_touched_per_item": 16.0,
+        "cpu": "8",
+        "cpu_s": 12.203125,
+        "idle_polls": 11476586,
+        "items": 2999694,
+        "on_cpu_fraction": 1.0001826157281841,
+        "setup_errors": [],
+        "stage": "worker1",
+        "voluntary_context_switches": null,
+        "wall_s": 12.200896924323665
+      },
+      {
+        "allocations_after_ready": 0,
+        "busy_polls": 93745,
+        "bytes_touched_per_item": 16.0,
+        "cpu": "10",
+        "cpu_s": 12.203125,
+        "idle_polls": 11469777,
+        "items": 2999694,
+        "on_cpu_fraction": 0.9999526237822562,
+        "setup_errors": [],
+        "stage": "worker2",
+        "voluntary_context_switches": null,
+        "wall_s": 12.203703165298439
+      },
+      {
+        "allocations_after_ready": 0,
+        "busy_polls": 93745,
+        "bytes_touched_per_item": 16.0,
+        "cpu": "12",
+        "cpu_s": 12.203125,
+        "idle_polls": 11477796,
+        "items": 2999694,
+        "on_cpu_fraction": 1.0001551814992753,
+        "setup_errors": [],
+        "stage": "worker3",
+        "voluntary_context_switches": null,
+        "wall_s": 12.201231594588146
+      },
+      {
+        "allocations_after_ready": 0,
+        "busy_polls": 11492961,
+        "bytes_touched_per_item": 8.0,
+        "cpu": "14",
+        "cpu_s": 12.203125,
+        "idle_polls": 367080528,
+        "items": 11998776,
+        "on_cpu_fraction": 0.9999574326728367,
+        "setup_errors": [],
+        "stage": "sink",
+        "voluntary_context_switches": null,
+        "wall_s": 12.203644476527018
+      }
+    ],
+    "single_core_items_per_s": 221954.4
+  },
+  "command": "C:\\Users\\gress\\github\\stagelanes\\target\\release\\stagelanes-bench.exe --machine ryzen --machine-desc Ryzen 7 5700X (8 cores, 16 threads, AM4), 32 GB, Windows 11 Home build 26300, bare metal, Balanced power plan --note quiet system, GitHub Actions runner stopped, no GPU work; device interrupts still routed to CPUs 0-1 (step 2c policy, reverted in the registry but the reboot that applies the revert has not happened yet); fixed (evenly spaced) arrivals --arrivals fixed",
+  "config": {
+    "arrivals": "fixed: evenly spaced batches",
+    "batch": 8,
+    "block_bytes": 256,
+    "header_bytes": 64,
+    "housekeeping_cpu": "0",
+    "latency": "from each item's scheduled release to the sink; histogram bucket upper edge, 16 buckets per power of two (about 4.4%)",
+    "layout": "source, parse, 4 workers, sink; one logical CPU per physical core",
+    "link_slots": 1024,
+    "measure_s": 10.0,
+    "parse_iterations": 257,
+    "parse_ns": 500.0,
+    "pool_blocks": 4096,
+    "priority": "Normal",
+    "repeats": 3,
+    "socket": 0,
+    "stage_cpus": [
+      "2",
+      "4",
+      "6",
+      "8",
+      "10",
+      "12",
+      "14"
+    ],
+    "ticks_per_second": 3393698576.0,
+    "warmup_s": 2.0,
+    "work_iterations": 2058,
+    "work_iterations_per_ns": 0.5147395675158154,
+    "work_ns": 4000.0
+  },
+  "kind": "pipeline",
+  "loads": [
+    {
+      "ideal_queue": {
+        "max_ns": 10000,
+        "mean_ns": 7250,
+        "n": 4997944,
+        "p50_ns": 6049,
+        "p90_ns": 10000,
+        "p99_9_ns": 10000,
+        "p99_ns": 10000
+      },
+      "load": 0.5,
+      "pipeline": {
+        "pooled": {
+          "max_ns": 2809593,
+          "mean_ns": 8445,
+          "n": 14993808,
+          "p50_ns": 8933,
+          "p90_ns": 10623,
+          "p99_9_ns": 57548,
+          "p99_ns": 10623
+        },
+        "repeats": [
+          {
+            "achieved_items_per_s": 499793.6,
+            "latency": {
+              "max_ns": 876141,
+              "mean_ns": 7675,
+              "n": 4997936,
+              "p50_ns": 8933,
+              "p90_ns": 10623,
+              "p99_9_ns": 13777,
+              "p99_ns": 10623
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 749691,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "2",
+                "cpu_s": 12.203125,
+                "idle_polls": 589360693,
+                "items": 5997528,
+                "on_cpu_fraction": 1.000291289936352,
+                "setup_errors": [],
+                "stage": "source",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199571387626975
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1415198,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "4",
+                "cpu_s": 12.203125,
+                "idle_polls": 516506179,
+                "items": 5997528,
+                "on_cpu_fraction": 1.000293449565046,
+                "setup_errors": [],
+                "stage": "parse",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199545048811666
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1498700,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "6",
+                "cpu_s": 12.1875,
+                "idle_polls": 353332010,
+                "items": 1499382,
+                "on_cpu_fraction": 0.9990160835950895,
+                "setup_errors": [],
+                "stage": "worker0",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199503291420188
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1498734,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "8",
+                "cpu_s": 12.203125,
+                "idle_polls": 353632534,
+                "items": 1499382,
+                "on_cpu_fraction": 1.0002997642118359,
+                "setup_errors": [],
+                "stage": "worker1",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199468036079349
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1498684,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "10",
+                "cpu_s": 12.1875,
+                "idle_polls": 353435451,
+                "items": 1499382,
+                "on_cpu_fraction": 0.9990270002164515,
+                "setup_errors": [],
+                "stage": "worker2",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199369984354204
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1498631,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "12",
+                "cpu_s": 12.203125,
+                "idle_polls": 353480266,
+                "items": 1499382,
+                "on_cpu_fraction": 1.0003060436144358,
+                "setup_errors": [],
+                "stage": "worker3",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199391454145456
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 5978846,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "14",
+                "cpu_s": 12.1875,
+                "idle_polls": 382305905,
+                "items": 5997528,
+                "on_cpu_fraction": 0.9990230227515507,
+                "setup_errors": [],
+                "stage": "sink",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199418554371931
+              }
+            ]
+          },
+          {
+            "achieved_items_per_s": 499793.6,
+            "latency": {
+              "max_ns": 1974419,
+              "mean_ns": 8189,
+              "n": 4997936,
+              "p50_ns": 8933,
+              "p90_ns": 10623,
+              "p99_9_ns": 84989,
+              "p99_ns": 10623
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 749691,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "2",
+                "cpu_s": 12.1875,
+                "idle_polls": 588782804,
+                "items": 5997528,
+                "on_cpu_fraction": 0.9990112644741024,
+                "setup_errors": [],
+                "stage": "source",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199562140488696
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1429186,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "4",
+                "cpu_s": 12.203125,
+                "idle_polls": 516010589,
+                "items": 5997528,
+                "on_cpu_fraction": 1.0002932532347795,
+                "setup_errors": [],
+                "stage": "parse",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199547443249422
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1497469,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "6",
+                "cpu_s": 12.1875,
+                "idle_polls": 353104825,
+                "items": 1499382,
+                "on_cpu_fraction": 0.9990152008244708,
+                "setup_errors": [],
+                "stage": "worker0",
+                "voluntary_context_switches": null,
+                "wall_s": 12.19951407139937
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1497421,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "8",
+                "cpu_s": 12.171875,
+                "idle_polls": 353338934,
+                "items": 1499382,
+                "on_cpu_fraction": 0.9977364400410498,
+                "setup_errors": [],
+                "stage": "worker1",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199489275443536
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1497343,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "10",
+                "cpu_s": 12.171875,
+                "idle_polls": 353207976,
+                "items": 1499382,
+                "on_cpu_fraction": 0.9977439078312809,
+                "setup_errors": [],
+                "stage": "worker2",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199397966214665
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1497454,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "12",
+                "cpu_s": 12.203125,
+                "idle_polls": 353316153,
+                "items": 1499382,
+                "on_cpu_fraction": 1.0003026484226807,
+                "setup_errors": [],
+                "stage": "worker3",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199432860887054
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 5978081,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "14",
+                "cpu_s": 12.171875,
+                "idle_polls": 381648779,
+                "items": 5997528,
+                "on_cpu_fraction": 0.9977396691870091,
+                "setup_errors": [],
+                "stage": "sink",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199449792266996
+              }
+            ]
+          },
+          {
+            "achieved_items_per_s": 499793.6,
+            "latency": {
+              "max_ns": 2809593,
+              "mean_ns": 9470,
+              "n": 4997936,
+              "p50_ns": 8933,
+              "p90_ns": 10623,
+              "p99_9_ns": 808562,
+              "p99_ns": 10623
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 749691,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "2",
+                "cpu_s": 12.1875,
+                "idle_polls": 589219578,
+                "items": 5997528,
+                "on_cpu_fraction": 0.9990103505364156,
+                "setup_errors": [],
+                "stage": "source",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199573301173464
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1418718,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "4",
+                "cpu_s": 12.1875,
+                "idle_polls": 516066505,
+                "items": 5997528,
+                "on_cpu_fraction": 0.9990106237330534,
+                "setup_errors": [],
+                "stage": "parse",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199569964990316
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1496180,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "6",
+                "cpu_s": 12.15625,
+                "idle_polls": 353247074,
+                "items": 1499382,
+                "on_cpu_fraction": 0.9964525342111443,
+                "setup_errors": [],
+                "stage": "worker0",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199527406113395
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1496300,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "8",
+                "cpu_s": 12.1875,
+                "idle_polls": 353588042,
+                "items": 1499382,
+                "on_cpu_fraction": 0.9990171279902246,
+                "setup_errors": [],
+                "stage": "worker1",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199490537783108
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1496294,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "10",
+                "cpu_s": 12.1875,
+                "idle_polls": 353375669,
+                "items": 1499382,
+                "on_cpu_fraction": 0.9990190748535994,
+                "setup_errors": [],
+                "stage": "worker2",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199466763721212
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1496250,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "12",
+                "cpu_s": 12.1875,
+                "idle_polls": 353446523,
+                "items": 1499382,
+                "on_cpu_fraction": 0.9990224213760536,
+                "setup_errors": [],
+                "stage": "worker3",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199425897982286
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 5979118,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "14",
+                "cpu_s": 12.1875,
+                "idle_polls": 381822337,
+                "items": 5997528,
+                "on_cpu_fraction": 0.999024769452018,
+                "setup_errors": [],
+                "stage": "sink",
+                "voluntary_context_switches": null,
+                "wall_s": 12.19939722484063
+              }
+            ]
+          }
+        ],
+        "target_items_per_s": 499794.0
+      },
+      "single_core": {
+        "pooled": {
+          "max_ns": 3120866,
+          "mean_ns": 20679,
+          "n": 3329304,
+          "p50_ns": 23170,
+          "p90_ns": 37315,
+          "p99_9_ns": 40693,
+          "p99_ns": 37315
+        },
+        "repeats": [
+          {
+            "achieved_items_per_s": 110976.8,
+            "latency": {
+              "max_ns": 3120866,
+              "mean_ns": 21320,
+              "n": 1109768,
+              "p50_ns": 23170,
+              "p90_ns": 37315,
+              "p99_9_ns": 46340,
+              "p99_ns": 37315
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 166466,
+                "bytes_touched_per_item": 48.0,
+                "cpu": "4",
+                "cpu_s": 12.1875,
+                "idle_polls": 334507061,
+                "items": 1331728,
+                "on_cpu_fraction": 0.9989859726452015,
+                "setup_errors": [],
+                "stage": "single-core",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199871002921975
+              }
+            ]
+          },
+          {
+            "achieved_items_per_s": 110976.8,
+            "latency": {
+              "max_ns": 506497,
+              "mean_ns": 20304,
+              "n": 1109768,
+              "p50_ns": 23170,
+              "p90_ns": 37315,
+              "p99_9_ns": 40693,
+              "p99_ns": 37315
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 166466,
+                "bytes_touched_per_item": 48.0,
+                "cpu": "4",
+                "cpu_s": 12.1875,
+                "idle_polls": 334731806,
+                "items": 1331728,
+                "on_cpu_fraction": 0.9989855009326394,
+                "setup_errors": [],
+                "stage": "single-core",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199876763598585
+              }
+            ]
+          },
+          {
+            "achieved_items_per_s": 110976.8,
+            "latency": {
+              "max_ns": 984099,
+              "mean_ns": 20413,
+              "n": 1109768,
+              "p50_ns": 23170,
+              "p90_ns": 37315,
+              "p99_9_ns": 40693,
+              "p99_ns": 37315
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 166466,
+                "bytes_touched_per_item": 48.0,
+                "cpu": "4",
+                "cpu_s": 12.1875,
+                "idle_polls": 334620715,
+                "items": 1331728,
+                "on_cpu_fraction": 0.9989849242133646,
+                "setup_errors": [],
+                "stage": "single-core",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199883806651897
+              }
+            ]
+          }
+        ],
+        "target_items_per_s": 110977.2
+      }
+    },
+    {
+      "ideal_queue": {
+        "max_ns": 10000,
+        "mean_ns": 7250,
+        "n": 8996288,
+        "p50_ns": 6049,
+        "p90_ns": 10000,
+        "p99_9_ns": 10000,
+        "p99_ns": 10000
+      },
+      "load": 0.9,
+      "pipeline": {
+        "pooled": {
+          "max_ns": 25365105,
+          "mean_ns": 384755,
+          "n": 26988864,
+          "p50_ns": 8933,
+          "p90_ns": 10623,
+          "p99_9_ns": 21757357,
+          "p99_ns": 13509772
+        },
+        "repeats": [
+          {
+            "achieved_items_per_s": 899628.8,
+            "latency": {
+              "max_ns": 3470843,
+              "mean_ns": 16204,
+              "n": 8996288,
+              "p50_ns": 8933,
+              "p90_ns": 10623,
+              "p99_9_ns": 2190000,
+              "p99_ns": 13777
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1349444,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "2",
+                "cpu_s": 12.1875,
+                "idle_polls": 579063813,
+                "items": 10795552,
+                "on_cpu_fraction": 0.9990095932984681,
+                "setup_errors": [],
+                "stage": "source",
+                "voluntary_context_switches": null,
+                "wall_s": 12.19958254831174
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2538151,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "4",
+                "cpu_s": 12.15625,
+                "idle_polls": 371914218,
+                "items": 10795552,
+                "on_cpu_fraction": 0.9964515113213934,
+                "setup_errors": [],
+                "stage": "parse",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199539929323413
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2670624,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "6",
+                "cpu_s": 12.171875,
+                "idle_polls": 72055293,
+                "items": 2698888,
+                "on_cpu_fraction": 0.9977331125922891,
+                "setup_errors": [],
+                "stage": "worker0",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199529960848238
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2675843,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "8",
+                "cpu_s": 12.203125,
+                "idle_polls": 72714038,
+                "items": 2698888,
+                "on_cpu_fraction": 1.000299499696607,
+                "setup_errors": [],
+                "stage": "worker1",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199471262058248
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2674894,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "10",
+                "cpu_s": 12.1875,
+                "idle_polls": 72309935,
+                "items": 2698888,
+                "on_cpu_fraction": 0.9990177867889075,
+                "setup_errors": [],
+                "stage": "worker2",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199482492872992
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2674592,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "12",
+                "cpu_s": 12.1875,
+                "idle_polls": 72528747,
+                "items": 2698888,
+                "on_cpu_fraction": 0.9990204334783007,
+                "setup_errors": [],
+                "stage": "worker3",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199450172972583
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 10745799,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "14",
+                "cpu_s": 12.203125,
+                "idle_polls": 363782818,
+                "items": 10795552,
+                "on_cpu_fraction": 1.0003048959992558,
+                "setup_errors": [],
+                "stage": "sink",
+                "voluntary_context_switches": null,
+                "wall_s": 12.19940545008497
+              }
+            ]
+          },
+          {
+            "achieved_items_per_s": 899628.8,
+            "latency": {
+              "max_ns": 2669377,
+              "mean_ns": 11779,
+              "n": 8996288,
+              "p50_ns": 8933,
+              "p90_ns": 10623,
+              "p99_9_ns": 1688721,
+              "p99_ns": 12098
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1349444,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "2",
+                "cpu_s": 12.203125,
+                "idle_polls": 579459399,
+                "items": 10795552,
+                "on_cpu_fraction": 1.0002916119496246,
+                "setup_errors": [],
+                "stage": "source",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199567460348312
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2542322,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "4",
+                "cpu_s": 12.1875,
+                "idle_polls": 372073129,
+                "items": 10795552,
+                "on_cpu_fraction": 0.999011812509352,
+                "setup_errors": [],
+                "stage": "parse",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199555448085265
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2677095,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "6",
+                "cpu_s": 12.171875,
+                "idle_polls": 72096415,
+                "items": 2698888,
+                "on_cpu_fraction": 0.9977349086416584,
+                "setup_errors": [],
+                "stage": "worker0",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199508000147153
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2682432,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "8",
+                "cpu_s": 12.203125,
+                "idle_polls": 72785795,
+                "items": 2698888,
+                "on_cpu_fraction": 1.0002983085583343,
+                "setup_errors": [],
+                "stage": "worker1",
+                "voluntary_context_switches": null,
+                "wall_s": 12.19948578898187
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2682107,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "10",
+                "cpu_s": 12.1875,
+                "idle_polls": 72384678,
+                "items": 2698888,
+                "on_cpu_fraction": 0.9990221514546812,
+                "setup_errors": [],
+                "stage": "worker2",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199429194091161
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2681238,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "12",
+                "cpu_s": 12.203125,
+                "idle_polls": 72634876,
+                "items": 2698888,
+                "on_cpu_fraction": 1.0002994849100455,
+                "setup_errors": [],
+                "stage": "worker3",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199471442392474
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 10746931,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "14",
+                "cpu_s": 12.1875,
+                "idle_polls": 363998524,
+                "items": 10795552,
+                "on_cpu_fraction": 0.9990241032602315,
+                "setup_errors": [],
+                "stage": "sink",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199405359917858
+              }
+            ]
+          },
+          {
+            "achieved_items_per_s": 899628.8,
+            "latency": {
+              "max_ns": 25365105,
+              "mean_ns": 1126281,
+              "n": 8996288,
+              "p50_ns": 9328,
+              "p90_ns": 3097128,
+              "p99_9_ns": 23726566,
+              "p99_ns": 19105702
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 1349444,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "2",
+                "cpu_s": 12.015625,
+                "idle_polls": 523176946,
+                "items": 10795552,
+                "on_cpu_fraction": 0.9849227136380633,
+                "setup_errors": [],
+                "stage": "source",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199561278891847
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2353400,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "4",
+                "cpu_s": 12.046875,
+                "idle_polls": 333952491,
+                "items": 10795552,
+                "on_cpu_fraction": 0.9874853913493178,
+                "setup_errors": [],
+                "stage": "parse",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199547563472239
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2314885,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "6",
+                "cpu_s": 12.109375,
+                "idle_polls": 66836150,
+                "items": 2698888,
+                "on_cpu_fraction": 0.9926117398037902,
+                "setup_errors": [],
+                "stage": "worker0",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199508140407106
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2235327,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "8",
+                "cpu_s": 12.078125,
+                "idle_polls": 61837240,
+                "items": 2698888,
+                "on_cpu_fraction": 0.9900574534745674,
+                "setup_errors": [],
+                "stage": "worker1",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199418283870596
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2300894,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "10",
+                "cpu_s": 12.171875,
+                "idle_polls": 65799115,
+                "items": 2698888,
+                "on_cpu_fraction": 0.9977392889972087,
+                "setup_errors": [],
+                "stage": "worker2",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199454440882555
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 2266857,
+                "bytes_touched_per_item": 16.0,
+                "cpu": "12",
+                "cpu_s": 12.0625,
+                "idle_polls": 64656091,
+                "items": 2698888,
+                "on_cpu_fraction": 0.9887720806325456,
+                "setup_errors": [],
+                "stage": "worker3",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199474718464215
+              },
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 10650061,
+                "bytes_touched_per_item": 8.0,
+                "cpu": "14",
+                "cpu_s": 12.15625,
+                "idle_polls": 352489573,
+                "items": 10795552,
+                "on_cpu_fraction": 0.9964639317999686,
+                "setup_errors": [],
+                "stage": "sink",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199387867498109
+              }
+            ]
+          }
+        ],
+        "target_items_per_s": 899629.2000000001
+      },
+      "single_core": {
+        "pooled": {
+          "max_ns": 941010,
+          "mean_ns": 20863,
+          "n": 5992776,
+          "p50_ns": 23170,
+          "p90_ns": 37315,
+          "p99_9_ns": 273750,
+          "p99_ns": 37315
+        },
+        "repeats": [
+          {
+            "achieved_items_per_s": 199759.2,
+            "latency": {
+              "max_ns": 71651,
+              "mean_ns": 20292,
+              "n": 1997592,
+              "p50_ns": 23170,
+              "p90_ns": 37315,
+              "p99_9_ns": 40693,
+              "p99_ns": 37315
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 299639,
+                "bytes_touched_per_item": 48.0,
+                "cpu": "4",
+                "cpu_s": 12.203125,
+                "idle_polls": 67206316,
+                "items": 2397112,
+                "on_cpu_fraction": 1.000265522974928,
+                "setup_errors": [],
+                "stage": "single-core",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199885650068413
+              }
+            ]
+          },
+          {
+            "achieved_items_per_s": 199759.2,
+            "latency": {
+              "max_ns": 941010,
+              "mean_ns": 21457,
+              "n": 1997592,
+              "p50_ns": 23170,
+              "p90_ns": 37315,
+              "p99_9_ns": 524288,
+              "p99_ns": 37315
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 299639,
+                "bytes_touched_per_item": 48.0,
+                "cpu": "4",
+                "cpu_s": 12.15625,
+                "idle_polls": 66995721,
+                "items": 2397112,
+                "on_cpu_fraction": 0.9964234186798355,
+                "setup_errors": [],
+                "stage": "single-core",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199883876781874
+              }
+            ]
+          },
+          {
+            "achieved_items_per_s": 199759.2,
+            "latency": {
+              "max_ns": 580330,
+              "mean_ns": 20841,
+              "n": 1997592,
+              "p50_ns": 23170,
+              "p90_ns": 37315,
+              "p99_9_ns": 285870,
+              "p99_ns": 37315
+            },
+            "stages": [
+              {
+                "allocations_after_ready": 0,
+                "busy_polls": 299639,
+                "bytes_touched_per_item": 48.0,
+                "cpu": "4",
+                "cpu_s": 12.1875,
+                "idle_polls": 66978292,
+                "items": 2397112,
+                "on_cpu_fraction": 0.9989982389689577,
+                "setup_errors": [],
+                "stage": "single-core",
+                "voluntary_context_switches": null,
+                "wall_s": 12.199721205293043
+              }
+            ]
+          }
+        ],
+        "target_items_per_s": 199758.96
+      }
+    }
+  ],
+  "machine": {
+    "description": "Ryzen 7 5700X (8 cores, 16 threads, AM4), 32 GB, Windows 11 Home build 26300, bare metal, Balanced power plan",
+    "gpu": "not used (CPU-only benchmark)",
+    "name": "ryzen",
+    "network": "not used (single machine)",
+    "os_build": "Microsoft Windows [Version 10.0.26300.10075]",
+    "topology": {
+      "cores": 8,
+      "logical_cpus": 16,
+      "sockets": 1,
+      "source": "Windows GetLogicalProcessorInformationEx; frequency from CallNtPowerInformation"
+    }
+  },
+  "note": "quiet system, GitHub Actions runner stopped, no GPU work; device interrupts still routed to CPUs 0-1 (step 2c policy, reverted in the registry but the reboot that applies the revert has not happened yet); fixed (evenly spaced) arrivals",
+  "r2": {
+    "high_load": 0.9,
+    "ideal_queue_ratio": 1.0,
+    "low_load": 0.5,
+    "pass": true,
+    "pipeline_ratio_median": 1.2969029464369763,
+    "pipeline_ratio_per_repeat": [
+      1.2969029464369763,
+      1.1388496658194485,
+      1798.5222630142143
+    ],
+    "rule": "p99 at the highest load is at most 3x p99 at the lowest load",
+    "single_core_ratio_per_repeat": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "stage_rules": {
+    "locks": "stage code uses no lock types and links are lock-free SPSC rings; the on-CPU fraction (and voluntary context switches on Linux) would show a stage that blocked",
+    "max_allocations_after_ready": 0,
+    "max_bytes_touched_per_item": 48.0,
+    "min_on_cpu_fraction": 0.9849227136380633,
+    "r1": "stages touch only the 64-byte header of each 256-byte block; the payload is never addressed",
+    "voluntary_context_switches_total": "not reported per thread by this OS"
+  },
+  "started_utc": "2026-11-22 17:54:26Z"
+}
