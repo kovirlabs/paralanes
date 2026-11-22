@@ -34,8 +34,37 @@ any measured size upward. Method: [`README.md`](README.md).
 | Filter (u32, about 1% match) | ryzen | Vulkan | none ≤ 256 MiB | 256 MiB (marginal: 23.4 against 23.6 ms, below CPU-time resolution) | [filter-2](runs/ryzen/2026-11-22-filter-2.json) |
 | Filter (u32, about 1% match) | ryzen | DX12 | none ≤ 256 MiB | 64 MiB | [filter-2](runs/ryzen/2026-11-22-filter-2.json) |
 
+### FFT (4,096-sample frames), from bytelanes `d0b3e47`
+
+| Op | Machine | wgpu backend | Crossover size (latency) | Crossover size (CPU time) | Run files |
+| --- | --- | --- | --- | --- | --- |
+| FFT (fixed point, 4,096 samples per frame) | ryzen | Vulkan | 256 KiB (16 frames) | 256 KiB | [fft-2](runs/ryzen/2026-11-22-fft-2.json) |
+| FFT (fixed point, 4,096 samples per frame) | ryzen | DX12 | 256 KiB (16 frames) | 256 KiB | [fft-2](runs/ryzen/2026-11-22-fft-2.json) |
+
+| Size | CPU reference | Vulkan | DX12 |
+| --- | --- | --- | --- |
+| 256 KiB (16 frames) | 1.43 ms; CPU 1.43 ms | 0.667 ms; CPU 0.397 ms | 0.790 ms; CPU 0.471 ms |
+| 4 MiB (256 frames) | 23.7 ms; CPU 24.0 ms | 1.67 ms; CPU 0.919 ms | 1.67 ms; CPU 0.838 ms |
+| 64 MiB (4,096 frames) | 383 ms; CPU 378 ms | 21.2 ms; CPU 9.44 ms | 21.5 ms; CPU 7.31 ms |
+| 256 MiB (16,384 frames) | 1,475 ms; CPU 1,469 ms | 80.4 ms; CPU 38.5 ms | 88.3 ms; CPU 26.0 ms |
+
+- **The FFT is the first op where the GPU wins on latency.** At 64 MiB it
+  is about 18× faster than the CPU reference, and it uses 40 to 50× less CPU
+  time.
+- **Caveat:** the CPU reference FFT is scalar `i64` code on one core,
+  without SIMD. An optimised multi-core CPU FFT would narrow the latency
+  gap; that is not measured yet. The CPU-time saving is large enough that
+  it would likely remain, but that is an expectation, not a measurement.
+- **The first FFT run** ([fft](runs/ryzen/2026-11-22-fft.json), same build
+  and command) measured Vulkan at 36.6 ms at 64 MiB, with 28 repetitions
+  between 36.5 and 39.4 ms. Two Vulkan-only repeats (scratch runs, not
+  kept) and this repeat measured 21.2 ms; the cause of the outlier is not
+  known. Every other point agrees between the two runs.
+
+### The other ops (from bytelanes `1bd1232`)
+
 **On this machine the GPU never beats the CPU reference on latency for a
-single op.** A Ryzen core has hardware CRC-32C and AES, and the GPU sits on
+single op other than the FFT.** A Ryzen core has hardware CRC-32C and AES, and the GPU sits on
 PCIe 3.0. The plan's risk table anticipated this result. Offloading saves
 CPU time only for AES and filter on large inputs.
 
