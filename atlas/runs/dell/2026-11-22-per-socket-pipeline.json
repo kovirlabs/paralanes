@@ -1,0 +1,334 @@
+{
+  "kind": "per-socket pipeline experiment (not a milestone)",
+  "date": "2026-11-22",
+  "question": "Does running diagsteno ingest as one complete pipeline per socket (stagelanes pinning and rings, socket-local memory) beat diagsteno's single unpinned ingest on the Dell?",
+  "machine": {
+    "name": "dell",
+    "host": "Dell PowerEdge R440, 2x Intel Xeon Silver 4214 (12 cores each, HT on), Proxmox VE 9.2.21 (kernel 7.0.14-25-pve); VM 102 the only guest running",
+    "host_memory_per_node": "node 0: 3x 32 GB DDR4-2400; node 1: 2x 32 GB DDR4-2400",
+    "guest": "KVM VM 102, cpu=host, 24 vCPUs (2 sockets x 12 cores), 2 NUMA nodes",
+    "pinning": "hookscript pin-102.sh: vCPU 0-11 -> host CPUs 0,2,...,22 (node 0), 12-23 -> 1,3,...,23 (node 1); numa0/numa1 policy=bind to host nodes 0/1; verified on the host 2026-11-22",
+    "storage": "/dev/shm (tmpfs, memory-backed: fsync is a no-op) and ~/.cache (ext4 on LVM on a QEMU disk on a ZFS pool of 4x WD Blue SA510 SATA SSDs without power-loss protection, behind a PERC H730P)"
+  },
+  "os": "Ubuntu 26.04.1 LTS",
+  "kernel": "7.0.0-43-generic",
+  "rust": "rustc 1.95.0 (59807616e 2026-04-14), release profile",
+  "gpu": "none",
+  "gpu_driver": "n/a",
+  "wgpu_backend": "n/a",
+  "gpu_host_link": "n/a",
+  "network": "loopback (127.0.0.1), sender and ingest on the same guest",
+  "commits": {
+    "paralanes": "exp-per-socket-pipeline, experiments/per-socket-pipeline (code at 67ea9f6 before an amend that only removed build output)",
+    "diagsteno": "f6d1014 (main, M7 merged)",
+    "stagelanes": "b09f58f (main)",
+    "bytelanes": "main with M7 FFT"
+  },
+  "commands": [
+    "cd paralanes/experiments/per-socket-pipeline && cargo build --release",
+    "for r in 1 2 3; do for store in /dev/shm/psp ~/.cache/psp-disk; do for l in baseline per-socket per-socket-unpinned; do ./target/release/per-socket-pipeline --layout $l --store-dir $store --seconds 60; done; done; done"
+  ],
+  "workload": "60 s of the default 64-channel synthetic layout (seed 2026): 384,000 frames, 51,072,000 samples, 13,856 feature windows; sent unpaced (as fast as ingest accepts) over TCP; every batch stored durably (Parquet + fsync) before it is acknowledged",
+  "layouts": {
+    "baseline": "diagsteno::ingest::Ingest: reader thread, writer thread (store + ack), ONE feature thread; unpinned; one sender with all 64 channels",
+    "per-socket": "2 shards, shard s = accel 16s..16s+15 and strain 32+16s..32+16s+15, all threads pinned to socket s: ingest core, store core, 4 feature cores, sender core; stagelanes-ring SPSC rings between stages; own TCP port and store directory per shard",
+    "per-socket-unpinned": "the same 2 shards with no pinning"
+  },
+  "fairness_note": "The baseline has 1 feature thread and 1 store thread; per-socket layouts have 8 feature threads and 2 store threads. Differences between baseline and per-socket therefore mix parallelism with placement. Pinned vs unpinned per-socket isolates placement.",
+  "results": [
+    {
+      "rep": 1,
+      "acked_samples_per_s": 24085138.0,
+      "layout": "baseline",
+      "result": {
+        "all_acked_s": 2.120477802,
+        "all_features_stored_s": 4.012782015,
+        "error": null,
+        "frames": 384000,
+        "missing_frames": 0,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/dev/shm/psp",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 1,
+      "acked_samples_per_s": 38296148.0,
+      "layout": "per-socket",
+      "result": {
+        "all_acked_s": 1.333606721,
+        "all_features_stored_s": 1.326400175,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/dev/shm/psp",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 1,
+      "acked_samples_per_s": 35213362.0,
+      "layout": "per-socket-unpinned",
+      "result": {
+        "all_acked_s": 1.450358532,
+        "all_features_stored_s": 1.442146183,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/dev/shm/psp",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 1,
+      "acked_samples_per_s": 10072007.0,
+      "layout": "baseline",
+      "result": {
+        "all_acked_s": 5.070687543,
+        "all_features_stored_s": 6.675209518,
+        "error": null,
+        "frames": 384000,
+        "missing_frames": 0,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/home/evangress/.cache/psp-disk",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 1,
+      "acked_samples_per_s": 6767986.0,
+      "layout": "per-socket",
+      "result": {
+        "all_acked_s": 7.546114777,
+        "all_features_stored_s": 7.849337601,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/home/evangress/.cache/psp-disk",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 1,
+      "acked_samples_per_s": 1233550.0,
+      "layout": "per-socket-unpinned",
+      "result": {
+        "all_acked_s": 41.402461662,
+        "all_features_stored_s": 41.550160941,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/home/evangress/.cache/psp-disk",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 2,
+      "acked_samples_per_s": 23986896.0,
+      "layout": "baseline",
+      "result": {
+        "all_acked_s": 2.129162552,
+        "all_features_stored_s": 4.200315468,
+        "error": null,
+        "frames": 384000,
+        "missing_frames": 0,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/dev/shm/psp",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 2,
+      "acked_samples_per_s": 36238263.0,
+      "layout": "per-socket",
+      "result": {
+        "all_acked_s": 1.409339075,
+        "all_features_stored_s": 1.401371444,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/dev/shm/psp",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 2,
+      "acked_samples_per_s": 35861452.0,
+      "layout": "per-socket-unpinned",
+      "result": {
+        "all_acked_s": 1.424147593,
+        "all_features_stored_s": 1.416515124,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/dev/shm/psp",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 2,
+      "acked_samples_per_s": 10678232.0,
+      "layout": "baseline",
+      "result": {
+        "all_acked_s": 4.782814304,
+        "all_features_stored_s": 6.21844579,
+        "error": null,
+        "frames": 384000,
+        "missing_frames": 0,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/home/evangress/.cache/psp-disk",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 2,
+      "acked_samples_per_s": 7432967.0,
+      "layout": "per-socket",
+      "result": {
+        "all_acked_s": 6.87101153,
+        "all_features_stored_s": 7.296694083,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/home/evangress/.cache/psp-disk",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 2,
+      "acked_samples_per_s": 3175570.0,
+      "layout": "per-socket-unpinned",
+      "result": {
+        "all_acked_s": 16.082784403,
+        "all_features_stored_s": 16.390955111,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/home/evangress/.cache/psp-disk",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 3,
+      "acked_samples_per_s": 26697352.0,
+      "layout": "baseline",
+      "result": {
+        "all_acked_s": 1.912998729,
+        "all_features_stored_s": 3.81252997,
+        "error": null,
+        "frames": 384000,
+        "missing_frames": 0,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/dev/shm/psp",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 3,
+      "acked_samples_per_s": 38561857.0,
+      "layout": "per-socket",
+      "result": {
+        "all_acked_s": 1.324417533,
+        "all_features_stored_s": 1.318349886,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/dev/shm/psp",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 3,
+      "acked_samples_per_s": 38346387.0,
+      "layout": "per-socket-unpinned",
+      "result": {
+        "all_acked_s": 1.331859522,
+        "all_features_stored_s": 1.321694511,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/dev/shm/psp",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 3,
+      "acked_samples_per_s": 10783799.0,
+      "layout": "baseline",
+      "result": {
+        "all_acked_s": 4.7359932,
+        "all_features_stored_s": 6.167198477,
+        "error": null,
+        "frames": 384000,
+        "missing_frames": 0,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/home/evangress/.cache/psp-disk",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 3,
+      "acked_samples_per_s": 3177702.0,
+      "layout": "per-socket",
+      "result": {
+        "all_acked_s": 16.071993097,
+        "all_features_stored_s": 16.216519932,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/home/evangress/.cache/psp-disk",
+      "workers_per_shard": 4
+    },
+    {
+      "rep": 3,
+      "acked_samples_per_s": 7409114.0,
+      "layout": "per-socket-unpinned",
+      "result": {
+        "all_acked_s": 6.893132342,
+        "all_features_stored_s": 7.159256069,
+        "errors": [],
+        "frames": 384000,
+        "samples": 51072000,
+        "windows": 13856
+      },
+      "seconds_of_data": 60,
+      "store_dir": "/home/evangress/.cache/psp-disk",
+      "workers_per_shard": 4
+    }
+  ]
+}
