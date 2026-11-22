@@ -88,3 +88,45 @@ negative result:
   above). Only pinned vs unpinned per-socket isolates placement.
 - This is a virtual machine. QEMU's I/O threads and the host's ZFS threads
   are not pinned, and the disk results depend on the host's ZFS state.
+
+## Second run: one shared store with group commit
+
+Following conclusions 2 and 3, a fourth layout, `per-socket-shared-store`,
+keeps each shard's ingest and feature cores on its own socket, but:
+- One store thread on socket 0 (where all I/O devices attach) writes both
+  shards' frames as one durable file per 100 ms batch. That is one fsync per
+  batch instead of one per shard (group commit). It then acknowledges each
+  shard.
+- One writer stores all feature rows once per second (by time, not row
+  count).
+
+All four layouts were rerun in the same session, 3 repeats each; every run
+was complete. Run file: `atlas/runs/dell/2026-11-22-per-socket-pipeline-2.json`.
+
+| Layout | Memory store: acked | Disk store: acked |
+| --- | --- | --- |
+| Baseline: diagsteno ingest | 2.05 [1.99..2.13] (24.9 M/s) | 7.38 [4.61..12.89] |
+| Per socket, separate stores | 1.33 [1.32..1.35] (38.3 M/s) | 10.91 [6.78..18.99] |
+| Per socket, unpinned | 1.37 [1.34..1.40] (37.2 M/s) | 10.12 [6.93..16.21] |
+| Per socket, shared group-commit store | 2.27 [2.24..2.31] (22.5 M/s) | 9.03 [6.07..14.67] |
+
+What it shows:
+
+- **On disk, the shared store improved on separate per-socket stores on
+  average** (9.03 s vs 10.91 s). But the disk became much noisier between
+  the two sessions: the baseline ranged 4.61–12.89 s here, against
+  4.74–5.07 s an hour earlier. The layouts' disk ranges overlap, so 3
+  repeats cannot rank them. On this storage, disk results are dominated by
+  the host's ZFS behaviour, not the pipeline's design.
+- **In memory, the single store thread is now the bottleneck** (22.5 M
+  samples/s, below the baseline). One core encodes Parquet for both shards,
+  and it reads shard 1's frames from the other socket.
+- **The pattern that would combine the gains:**
+  - encode each shard's batch on its own socket, in parallel
+  - hand only finished, encoded bytes to one commit stage
+  - that stage writes them and issues one fsync for all
+
+  Encoding stays parallel and local, and syncs stay shared. Not built yet.
+- **Still true: fix the storage first.** With these disks no layout gives
+  stable durable throughput. Every layout still clears the 0.85 M samples/s
+  target by about 7x or more, even at its worst run.
