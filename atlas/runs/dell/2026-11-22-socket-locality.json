@@ -1,0 +1,420 @@
+{
+  "kind": "socket-locality experiment (not a milestone; full M6 is agent B's)",
+  "date": "2026-11-22",
+  "question": "Does keeping a stage's memory and threads on one socket speed up processing on the Dell?",
+  "machine": {
+    "name": "dell",
+    "host": "Dell PowerEdge R440, 2x Intel Xeon Silver 4214 (12 cores each, HT on), Proxmox VE 9.2.21 (kernel 7.0.14-25-pve); host load average ~0.5; VM 102 the only guest running",
+    "host_memory_per_node": "node 0 (CPU 1): 3x 32 GB DDR4-2400; node 1 (CPU 2): 2x 32 GB DDR4-2400",
+    "guest": "KVM VM 102, cpu=host, 24 vCPUs (2 sockets x 12 cores, 1 thread per core), 2 NUMA nodes",
+    "pinning": "hookscript local:snippets/pin-102.sh: guest vCPU 0-11 -> host CPUs 0,2,...,22 (node 0, one physical core each); 12-23 -> 1,3,...,23 (node 1); hyperthread siblings 24-47 left to the host. Verified on the host with taskset after a full VM stop/start",
+    "numa_binding": "numa0: cpus=0-11,hostnodes=0,policy=bind; numa1: cpus=12-23,hostnodes=1,policy=bind (32016 MB each). Verified on the host: /proc/<qemu pid>/numa_maps bind:0 region only on N0, bind:1 only on N1",
+    "not_pinned": "QEMU main and I/O threads and host ZFS threads may run on the hyperthread siblings of the pinned cores",
+    "pages": "4 KiB pages (no huge pages); TLB misses add to the latency figures for local and remote alike"
+  },
+  "os": "Ubuntu 26.04.1 LTS",
+  "kernel": "7.0.0-43-generic",
+  "rust": "rustc 1.95.0 (59807616e 2026-04-14), release profile",
+  "gpu": "none",
+  "gpu_driver": "n/a",
+  "wgpu_backend": "n/a",
+  "gpu_host_link": "n/a",
+  "network": "n/a (single machine)",
+  "commits": {
+    "diagsteno": "9e3c106 (branch exp-socket-locality; the binary was built from the same source before a formatting-only cargo fmt pass)",
+    "stagelanes": "b09f58f (main)",
+    "bytelanes": "main after bytelanes#3 (M7 FFT)"
+  },
+  "commands": [
+    "cd diagsteno/experiments/socket_locality && cargo build --release",
+    "for r in 1 2 3; do ./target/release/socket-locality memory --secs 8; ./target/release/socket-locality pipeline --secs 15; done"
+  ],
+  "method": {
+    "memory": "Threads pinned with stagelanes-arch to one node's physical cores, each reading its own 512 MiB stagelanes-mem Region bound to node 0 or 1 (mbind before touch). read_gb_s: sequential u64 reads over 8 s. chase_ns_per_load: 1 thread, a random cycle through every 64-byte line of a 512 MiB region, 20M dependent loads after 2M warm-up",
+    "pipeline": "One producer thread copies 4096-sample accelerometer windows (memory local to the producer) round-robin into 10 bounded queues; 10 worker threads run diagsteno::features::reference (Q31 FFT, band energies, time stats). Windows per second over 15 s after 1 s warm-up. Queues stayed full (mean queue wait ~0.6 ms), so the workers are the bottleneck"
+  },
+  "results": {
+    "memory": [
+      {
+        "rep": 1,
+        "chase_ns_per_load": 143.0,
+        "cpu_node": 0,
+        "local": true,
+        "mem_node": 0,
+        "read_gb_s": 13.55,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 1,
+        "chase_ns_per_load": 202.9,
+        "cpu_node": 0,
+        "local": false,
+        "mem_node": 1,
+        "read_gb_s": 8.86,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 1,
+        "chase_ns_per_load": 215.9,
+        "cpu_node": 1,
+        "local": false,
+        "mem_node": 0,
+        "read_gb_s": 8.32,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 1,
+        "chase_ns_per_load": 138.4,
+        "cpu_node": 1,
+        "local": true,
+        "mem_node": 1,
+        "read_gb_s": 12.01,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 1,
+        "chase_ns_per_load": null,
+        "cpu_node": 0,
+        "local": true,
+        "mem_node": 0,
+        "read_gb_s": 35.9,
+        "test": "memory",
+        "threads": 12
+      },
+      {
+        "rep": 1,
+        "chase_ns_per_load": null,
+        "cpu_node": 0,
+        "local": false,
+        "mem_node": 1,
+        "read_gb_s": 28.18,
+        "test": "memory",
+        "threads": 12
+      },
+      {
+        "rep": 1,
+        "chase_ns_per_load": null,
+        "cpu_node": 1,
+        "local": false,
+        "mem_node": 0,
+        "read_gb_s": 28.65,
+        "test": "memory",
+        "threads": 12
+      },
+      {
+        "rep": 1,
+        "chase_ns_per_load": null,
+        "cpu_node": 1,
+        "local": true,
+        "mem_node": 1,
+        "read_gb_s": 35.56,
+        "test": "memory",
+        "threads": 12
+      },
+      {
+        "rep": 2,
+        "chase_ns_per_load": 136.7,
+        "cpu_node": 0,
+        "local": true,
+        "mem_node": 0,
+        "read_gb_s": 12.88,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 2,
+        "chase_ns_per_load": 215.7,
+        "cpu_node": 0,
+        "local": false,
+        "mem_node": 1,
+        "read_gb_s": 7.52,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 2,
+        "chase_ns_per_load": 215.5,
+        "cpu_node": 1,
+        "local": false,
+        "mem_node": 0,
+        "read_gb_s": 8.05,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 2,
+        "chase_ns_per_load": 137.8,
+        "cpu_node": 1,
+        "local": true,
+        "mem_node": 1,
+        "read_gb_s": 12.15,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 2,
+        "chase_ns_per_load": null,
+        "cpu_node": 0,
+        "local": true,
+        "mem_node": 0,
+        "read_gb_s": 36.1,
+        "test": "memory",
+        "threads": 12
+      },
+      {
+        "rep": 2,
+        "chase_ns_per_load": null,
+        "cpu_node": 0,
+        "local": false,
+        "mem_node": 1,
+        "read_gb_s": 28.18,
+        "test": "memory",
+        "threads": 12
+      },
+      {
+        "rep": 2,
+        "chase_ns_per_load": null,
+        "cpu_node": 1,
+        "local": false,
+        "mem_node": 0,
+        "read_gb_s": 28.59,
+        "test": "memory",
+        "threads": 12
+      },
+      {
+        "rep": 2,
+        "chase_ns_per_load": null,
+        "cpu_node": 1,
+        "local": true,
+        "mem_node": 1,
+        "read_gb_s": 35.43,
+        "test": "memory",
+        "threads": 12
+      },
+      {
+        "rep": 3,
+        "chase_ns_per_load": 136.2,
+        "cpu_node": 0,
+        "local": true,
+        "mem_node": 0,
+        "read_gb_s": 12.88,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 3,
+        "chase_ns_per_load": 216.3,
+        "cpu_node": 0,
+        "local": false,
+        "mem_node": 1,
+        "read_gb_s": 7.45,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 3,
+        "chase_ns_per_load": 215.5,
+        "cpu_node": 1,
+        "local": false,
+        "mem_node": 0,
+        "read_gb_s": 8.05,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 3,
+        "chase_ns_per_load": 137.6,
+        "cpu_node": 1,
+        "local": true,
+        "mem_node": 1,
+        "read_gb_s": 12.15,
+        "test": "memory",
+        "threads": 1
+      },
+      {
+        "rep": 3,
+        "chase_ns_per_load": null,
+        "cpu_node": 0,
+        "local": true,
+        "mem_node": 0,
+        "read_gb_s": 35.97,
+        "test": "memory",
+        "threads": 12
+      },
+      {
+        "rep": 3,
+        "chase_ns_per_load": null,
+        "cpu_node": 0,
+        "local": false,
+        "mem_node": 1,
+        "read_gb_s": 28.18,
+        "test": "memory",
+        "threads": 12
+      },
+      {
+        "rep": 3,
+        "chase_ns_per_load": null,
+        "cpu_node": 1,
+        "local": false,
+        "mem_node": 0,
+        "read_gb_s": 28.59,
+        "test": "memory",
+        "threads": 12
+      },
+      {
+        "rep": 3,
+        "chase_ns_per_load": null,
+        "cpu_node": 1,
+        "local": true,
+        "mem_node": 1,
+        "read_gb_s": 35.43,
+        "test": "memory",
+        "threads": 12
+      }
+    ],
+    "pipeline": [
+      {
+        "rep": 1,
+        "layout": "same-socket: producer and 10 workers on node 0",
+        "mean_queue_us": 598.0,
+        "samples_per_s": 247347643.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 60388.0
+      },
+      {
+        "rep": 1,
+        "layout": "cross-socket: producer on node 0, 10 workers on node 1",
+        "mean_queue_us": 592.3,
+        "samples_per_s": 245076165.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 59833.0
+      },
+      {
+        "rep": 1,
+        "layout": "split: producer on node 0, 5 workers on each node",
+        "mean_queue_us": 578.9,
+        "samples_per_s": 260865839.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 63688.0
+      },
+      {
+        "rep": 1,
+        "layout": "unpinned: OS scheduler places producer and 10 workers",
+        "mean_queue_us": 668.5,
+        "samples_per_s": 259161936.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 63272.0
+      },
+      {
+        "rep": 2,
+        "layout": "same-socket: producer and 10 workers on node 0",
+        "mean_queue_us": 568.7,
+        "samples_per_s": 248240274.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 60606.0
+      },
+      {
+        "rep": 2,
+        "layout": "cross-socket: producer on node 0, 10 workers on node 1",
+        "mean_queue_us": 596.9,
+        "samples_per_s": 245200375.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 59863.0
+      },
+      {
+        "rep": 2,
+        "layout": "split: producer on node 0, 5 workers on each node",
+        "mean_queue_us": 631.8,
+        "samples_per_s": 261054863.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 63734.0
+      },
+      {
+        "rep": 2,
+        "layout": "unpinned: OS scheduler places producer and 10 workers",
+        "mean_queue_us": 657.7,
+        "samples_per_s": 259935543.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 63461.0
+      },
+      {
+        "rep": 3,
+        "layout": "same-socket: producer and 10 workers on node 0",
+        "mean_queue_us": 727.0,
+        "samples_per_s": 247661071.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 60464.0
+      },
+      {
+        "rep": 3,
+        "layout": "cross-socket: producer on node 0, 10 workers on node 1",
+        "mean_queue_us": 597.5,
+        "samples_per_s": 243724695.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 59503.0
+      },
+      {
+        "rep": 3,
+        "layout": "split: producer on node 0, 5 workers on each node",
+        "mean_queue_us": 653.2,
+        "samples_per_s": 261161249.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 63760.0
+      },
+      {
+        "rep": 3,
+        "layout": "unpinned: OS scheduler places producer and 10 workers",
+        "mean_queue_us": 676.0,
+        "samples_per_s": 261344716.0,
+        "seconds": 15.0,
+        "test": "pipeline",
+        "windows_per_s": 63805.0
+      }
+    ]
+  },
+  "superseded_tool": {
+    "perf_bench_numa_mem": "perf bench numa mem -p 1 -t {1,12} -T 1024 -s 10 under numactl --cpunodebind/--membind gave the same ~10 GB/s (12 threads) and 3-5 GB/s (1 thread) for local and remote memory, although its memory was confirmed on the requested node. Its loop is not bandwidth-bound, so it was not used for conclusions. Raw rows (cpu_node mem_node threads rep total_gb_s thread_gb_s):",
+    "rows": [
+      "cpu_node\tmem_node\tthreads\trep\ttotal_gb_s\tthread_gb_s",
+      "0\t0\t1\t1\t3.239\t3.239",
+      "0\t0\t1\t2\t4.708\t4.708",
+      "0\t0\t1\t3\t4.244\t4.244",
+      "0\t1\t1\t1\t3.976\t3.976",
+      "0\t1\t1\t2\t4.040\t4.040",
+      "0\t1\t1\t3\t4.762\t4.762",
+      "1\t0\t1\t1\t4.222\t4.222",
+      "1\t0\t1\t2\t4.895\t4.895",
+      "1\t0\t1\t3\t4.866\t4.866",
+      "1\t1\t1\t1\t3.243\t3.243",
+      "1\t1\t1\t2\t3.996\t3.996",
+      "1\t1\t1\t3\t4.867\t4.867",
+      "0\t0\t12\t1\t9.874\t0.823",
+      "0\t0\t12\t2\t10.015\t0.835",
+      "0\t0\t12\t3\t9.892\t0.824",
+      "0\t1\t12\t1\t9.867\t0.822",
+      "0\t1\t12\t2\t9.928\t0.827",
+      "0\t1\t12\t3\t10.108\t0.842",
+      "1\t0\t12\t1\t9.894\t0.824",
+      "1\t0\t12\t2\t9.908\t0.826",
+      "1\t0\t12\t3\t9.918\t0.826",
+      "1\t1\t12\t1\t10.059\t0.838",
+      "1\t1\t12\t2\t10.112\t0.843",
+      "1\t1\t12\t3\t10.012\t0.834"
+    ]
+  }
+}
