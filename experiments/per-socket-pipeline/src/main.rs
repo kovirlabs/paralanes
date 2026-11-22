@@ -672,6 +672,17 @@ fn main() -> Result<(), Error> {
         Some("time-critical") => stagelanes_arch::Priority::TimeCritical,
         Some(other) => return Err(format!("unknown --priority {other}").into()),
     };
+    // Item 1 of the strategy's Windows list: the GPU as the feature stage.
+    let engine = match arg("--features").as_deref() {
+        None | Some("cpu") => metrics::FeatureEngine::Cpu,
+        Some("gpu") => metrics::FeatureEngine::Gpu {
+            batch: arg("--batch").map_or(Ok(64), |s| s.parse())?,
+        },
+        Some(other) => return Err(format!("unknown --features {other}").into()),
+    };
+    metrics::FEATURE_ENGINE
+        .set(engine)
+        .map_err(|_| "feature engine set twice")?;
     metrics::STAGE_PRIORITY
         .set(priority)
         .map_err(|_| "priority set twice")?;

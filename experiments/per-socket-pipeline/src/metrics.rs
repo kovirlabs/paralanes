@@ -95,6 +95,9 @@ struct Shard {
     compute_us: Vec<u32>,
     ack_us: Vec<u32>,
     feature_us: Vec<u32>,
+    row_us: Vec<u32>,
+    check: Vec<(diagsteno::features::Window, diagsteno_store::FeatureRow)>,
+    cpu_in_compute: Duration,
     frames: u64,
     samples: u64,
     windows: u64,
@@ -123,6 +126,14 @@ fn run_shard(
         worker_tx.push(tx);
         worker_rx.push(rx);
     }
+    // GPU feature stage: open the device before the sender connects, so
+    // device start-up is not inside the measured run.
+    let mut gpu_engines: Vec<Option<GpuEngine>> = (0..workers)
+        .map(|_| match FEATURE_ENGINE.get() {
+            Some(FeatureEngine::Gpu { .. }) => open_gpu_engine().map(Some),
+            _ => Ok(None),
+        })
+        .collect::<Result<_, Error>>()?;
     let (stream, _) = listener.accept()?;
     stream.set_nodelay(true)?;
     let ack_stream = stream.try_clone()?;
@@ -211,37 +222,41 @@ fn run_shard(
             occ_workers.clone(),
         );
         let cpu = cores[2 + w];
-        worker_threads.push(std::thread::spawn(
-            move || -> Result<(Vec<u32>, Vec<u32>), Error> {
-                pin_stage(cpu)?;
-                let mut windower = Windower::new(&layout);
-                let mut lat = Vec::new();
-                let mut compute = Vec::new();
-                loop {
-                    let finished = store_done.load(Ordering::Acquire);
-                    let mut rows = Vec::new();
-                    let n = rx.pop_with(64, |(t, f)| {
-                        for win in windower.push(&f) {
-                            let c = Instant::now();
-                            rows.push(reference(&win));
-                            compute.push(c.elapsed().as_micros().min(u32::MAX as u128) as u32);
-                        }
-                        lat.push(t.elapsed().as_micros().min(u32::MAX as u128) as u32);
-                    });
-                    occ[w].popped.fetch_add(n as u64, Ordering::Relaxed);
-                    if !rows.is_empty() && row_tx.send(rows).is_err() {
+        let engine = FEATURE_ENGINE.get().copied().unwrap_or(FeatureEngine::Cpu);
+        let gpu_engine = gpu_engines[w].take();
+        worker_threads.push(std::thread::spawn(move || -> Result<WorkerOut, Error> {
+            pin_stage(cpu)?;
+            if let FeatureEngine::Gpu { batch } = engine {
+                let engine = gpu_engine.ok_or("GPU engine not opened")?;
+                return gpu_worker(engine, rx, &store_done, &layout, &row_tx, &occ[w], batch);
+            }
+            let mut out = WorkerOut::default();
+            let mut windower = Windower::new(&layout);
+            loop {
+                let finished = store_done.load(Ordering::Acquire);
+                let mut rows = Vec::new();
+                let n = rx.pop_with(64, |(t, f)| {
+                    for win in windower.push(&f) {
+                        let c = Instant::now();
+                        rows.push(reference(&win));
+                        out.compute.push(us(c.elapsed()));
+                        out.row_lat.push(us(t.elapsed()));
+                    }
+                    out.lat.push(us(t.elapsed()));
+                });
+                occ[w].popped.fetch_add(n as u64, Ordering::Relaxed);
+                if !rows.is_empty() && row_tx.send(rows).is_err() {
+                    break;
+                }
+                if n == 0 {
+                    if finished {
                         break;
                     }
-                    if n == 0 {
-                        if finished {
-                            break;
-                        }
-                        std::thread::yield_now();
-                    }
+                    std::thread::yield_now();
                 }
-                Ok((lat, compute))
-            },
-        ));
+            }
+            Ok(out)
+        }));
     }
     drop(row_tx);
     // Feature rows: stored once per second by time (the store core's thread
@@ -275,20 +290,140 @@ fn run_shard(
         store_thread.join().map_err(|_| "store panicked")??;
     let mut feature_us = Vec::new();
     let mut compute_us = Vec::new();
+    let mut row_us = Vec::new();
+    let mut check = Vec::new();
+    let mut cpu_in_compute = Duration::ZERO;
     for w in worker_threads {
-        let (l, c) = w.join().map_err(|_| "worker panicked")??;
-        feature_us.extend(l);
-        compute_us.extend(c);
+        let o = w.join().map_err(|_| "worker panicked")??;
+        feature_us.extend(o.lat);
+        compute_us.extend(o.compute);
+        row_us.extend(o.row_lat);
+        check.extend(o.check);
+        cpu_in_compute += o.cpu_in_compute;
     }
     Ok(Shard {
         transit_us,
         compute_us,
         ack_us,
         feature_us,
+        row_us,
+        check,
+        cpu_in_compute,
         frames,
         samples,
         windows,
     })
+}
+
+/// How feature windows are computed: the CPU reference on each worker, or
+/// one worker batching windows through diagsteno's `Engine` on the GPU.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FeatureEngine {
+    Cpu,
+    Gpu { batch: usize },
+}
+
+/// Set from `--features cpu|gpu` and `--batch`.
+pub static FEATURE_ENGINE: std::sync::OnceLock<FeatureEngine> = std::sync::OnceLock::new();
+
+fn us(d: Duration) -> u32 {
+    d.as_micros().min(u128::from(u32::MAX)) as u32
+}
+
+/// What one feature worker measured.
+#[derive(Default)]
+struct WorkerOut {
+    /// Per frame: ingest receipt -> popped by this worker.
+    lat: Vec<u32>,
+    /// Per window: compute time (GPU: the batch's time / its windows).
+    compute: Vec<u32>,
+    /// Per window: ingest receipt of the frame that completed it -> its row
+    /// computed.
+    row_lat: Vec<u32>,
+    /// GPU only: every window and the row the GPU computed, checked against
+    /// the CPU reference after the run, outside the timing.
+    check: Vec<(diagsteno::features::Window, diagsteno_store::FeatureRow)>,
+    /// GPU only: CPU time this thread spent inside Engine::compute.
+    cpu_in_compute: Duration,
+}
+
+type FrameRx =
+    stagelanes_ring::Consumer<(Instant, Frame), RING, Arc<Ring<(Instant, Frame), RING>>>;
+
+/// The GPU feature stage: windows the frames it receives, and computes them
+/// in batches of `batch` with `Engine` on the first hardware adapter
+/// (`WGPU_BACKEND` chooses the API). A partial batch is flushed once the
+/// ring has been idle for 10 ms, and at the end.
+type GpuEngine = diagsteno::features::Engine<bytelanes_wgpu::WgpuBackend>;
+
+/// diagsteno's feature engine on the first hardware adapter
+/// (`WGPU_BACKEND` chooses the API).
+fn open_gpu_engine() -> Result<GpuEngine, Error> {
+    let adapter = bytelanes_wgpu::hardware_adapters()
+        .into_iter()
+        .next()
+        .ok_or("no hardware GPU adapter")?;
+    let backend = bytelanes_wgpu::WgpuBackend::new(&adapter)?;
+    Ok(diagsteno::features::Engine::new(backend))
+}
+
+fn gpu_worker(
+    mut engine: GpuEngine,
+    mut rx: FrameRx,
+    store_done: &AtomicBool,
+    layout: &[ChannelSpec],
+    row_tx: &std::sync::mpsc::Sender<Vec<diagsteno_store::FeatureRow>>,
+    occ: &Occ,
+    batch: usize,
+) -> Result<WorkerOut, Error> {
+    let mut out = WorkerOut::default();
+    let mut windower = Windower::new(layout);
+    let mut pending: Vec<(Instant, diagsteno::features::Window)> = Vec::new();
+    let mut last_pop = Instant::now();
+    loop {
+        let finished = store_done.load(Ordering::Acquire);
+        let n = rx.pop_with(64, |(t, f)| {
+            for win in windower.push(&f) {
+                pending.push((t, win));
+            }
+            out.lat.push(us(t.elapsed()));
+        });
+        occ.popped.fetch_add(n as u64, Ordering::Relaxed);
+        if n > 0 {
+            last_pop = Instant::now();
+        }
+        let idle = n == 0 && last_pop.elapsed() >= Duration::from_millis(10);
+        let drained = finished && n == 0;
+        while pending.len() >= batch || (!pending.is_empty() && (idle || drained)) {
+            let take = pending.len().min(batch);
+            let (ts, wins): (Vec<Instant>, Vec<_>) = pending.drain(..take).unzip();
+            let c = Instant::now();
+            let tc = cpu_time::ThreadTime::now();
+            let rows = engine
+                .compute(&wins)
+                .map_err(|e| format!("GPU features: {e:?}"))?;
+            // Engine::compute submits and then spins on poll until the GPU
+            // finishes; this thread's CPU time in here is that waiting plus
+            // the host-side feature work (packing, band sums).
+            out.cpu_in_compute += tc.elapsed();
+            let per = us(c.elapsed()) / wins.len().max(1) as u32;
+            for t in &ts {
+                out.compute.push(per);
+                out.row_lat.push(us(t.elapsed()));
+            }
+            out.check.extend(wins.into_iter().zip(rows.iter().cloned()));
+            if row_tx.send(rows).is_err() {
+                return Ok(out);
+            }
+        }
+        if n == 0 {
+            if drained && pending.is_empty() {
+                break;
+            }
+            std::thread::yield_now();
+        }
+    }
+    Ok(out)
 }
 
 /// Run the step-1 measurement: two pinned shards with one housekeeping core
@@ -376,6 +511,7 @@ pub fn run(
     let sampler = crate::irq::Sampler::start(store_dir)?;
     ready.wait();
     let t0 = Instant::now();
+    let cpu0 = cpu_time::ProcessTime::now();
     let mut reports = Vec::new();
     for h in senders {
         reports.push(h.join().map_err(|_| "sender panicked")??);
@@ -384,6 +520,9 @@ pub fn run(
     let mut feature_us = Vec::new();
     let mut transit_us = Vec::new();
     let mut compute_us = Vec::new();
+    let mut row_us = Vec::new();
+    let mut check = Vec::new();
+    let mut gpu_wait_cpu = Duration::ZERO;
     let (mut frames, mut samples_n, mut windows) = (0u64, 0u64, 0u64);
     for h in shards {
         let s = h.join().map_err(|_| "shard panicked")??;
@@ -391,11 +530,22 @@ pub fn run(
         transit_us.extend(s.transit_us);
         compute_us.extend(s.compute_us);
         feature_us.extend(s.feature_us);
+        row_us.extend(s.row_us);
+        check.extend(s.check);
+        gpu_wait_cpu += s.cpu_in_compute;
         frames += s.frames;
         samples_n += s.samples;
         windows += s.windows;
     }
     let elapsed = t0.elapsed().as_secs_f64();
+    let cpu_s = cpu0.elapsed().as_secs_f64();
+    // GPU rows against the CPU reference, after the clock stopped.
+    let checked = check.len();
+    let mismatches = check
+        .iter()
+        .filter(|(win, row)| reference(win) != *row)
+        .count();
+    drop(check);
     let irq = sampler.stop(&pipeline_cpus, elapsed)?;
     stop.store(true, Ordering::Relaxed);
     monitor.join().map_err(|_| "monitor panicked")??;
@@ -414,9 +564,15 @@ pub fn run(
         "latency_us": {"ingest_to_ack": summary(ack_us),
                        "ingest_to_feature_worker": summary(feature_us),
                        "ring_transit_ingest_to_store": summary(transit_us),
-                       "window_compute": summary(compute_us)},
+                       "window_compute": summary(compute_us),
+                       "ingest_to_feature_row": summary(row_us)},
         "ring_occupancy": {"ingest_to_store_max_over_shards": summary(occ_i),
                            "store_to_worker_max_over_workers": summary(occ_w)},
+        "feature_engine": format!("{:?}", FEATURE_ENGINE.get().copied().unwrap_or(FeatureEngine::Cpu)),
+        "process_cpu_s": cpu_s,
+        "gpu_feature_thread_cpu_in_compute_s": gpu_wait_cpu.as_secs_f64(),
+        "gpu_rows_checked_against_reference": checked,
+        "gpu_rows_differing_from_reference": mismatches,
     });
     // Interrupt fields: the Linux names as before, plus Windows' DPC counters.
     if let (Some(o), Some(i)) = (out.as_object_mut(), irq.as_object()) {
