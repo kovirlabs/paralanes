@@ -12,7 +12,11 @@ and DX12 (see [`crossover.md`](crossover.md)).
 - Each run writes one file, `runs/<machine>/<YYYY-MM-DD>-<op>.json` or
   `runs/<machine>/<YYYY-MM-DD>-pipeline.json`, which is never edited after it
   is committed. Other files:
-  - `<YYYY-MM-DD>-commitlog.json` holds the transactional workload.
+  - `<YYYY-MM-DD>-commitlog.json` holds the transactional workload, one
+    batch in flight.
+  - `<YYYY-MM-DD>-stream.json` holds the same workload for throughput:
+    many batches in flight, GPU with program overlap off and on, and the
+    CPU reference on 1 to N threads.
   - A suffix such as `-untuned` marks a run kept for comparison.
   - The benchmark adds `-2`, `-3` and so on rather than overwrite a file.
 - One `bytelanes-bench` run file covers one op on the CPU reference and on
@@ -32,8 +36,11 @@ and DX12 (see [`crossover.md`](crossover.md)).
     spinning while it waits for completion.
   - Windows updates these counters at scheduler ticks (about 15.6 ms), so
     CPU-time figures are means over the whole series.
-- **The CPU reference** is `bytelanes::cpu` on one core, with hardware
-  CRC-32C and AES instructions.
+- **The CPU reference** is `bytelanes::cpu` with hardware CRC-32C and AES
+  instructions. Latency runs use one core; stream runs also use all cores.
+  Since bytelanes `c906b86` it reads sources in place and writes AES output
+  directly. Runs from before that understate the CPU and are marked as
+  superseded in `crossover.md`.
 - **The two crossovers** (latency and CPU time) are defined in
   `crossover.md`.
 - **Data** is generated from fixed seeds, so every machine measures the same
