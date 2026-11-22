@@ -128,5 +128,7 @@ What it shows:
 
   Encoding stays parallel and local, and syncs stay shared. Not built yet.
 - **Still true: fix the storage first.** With these disks no layout gives
-  stable durable throughput. Every layout still clears the 0.85 M samples/s
-  target by about 7x or more, even at its worst run.
+  stable durable throughput. The slowest disk run in this session (18.99 s
+  for 51.07 M samples, 2.7 M samples/s) still clears the 0.85 M samples/s
+  target by about 3x. The slowest in the first session (41.40 s, 1.2 M
+  samples/s) cleared it by only about 1.4x.
