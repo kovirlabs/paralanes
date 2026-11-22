@@ -31,10 +31,24 @@ use diagsteno::frame::{Frame, write_ack};
 use diagsteno::sender;
 use diagsteno_store::{SampleBlock, Store};
 use serde_json::json;
-use stagelanes_arch::{OsCpu, Topology};
+use stagelanes_arch::{OsCpu, Priority, Topology, set_current_thread_priority};
 use stagelanes_ring::{Producer, Ring};
 
 use crate::{BATCH, Error, RING, backoff, cores_on, frames_for, fresh_dir, pin, shard_layout};
+
+/// Priority for the pipeline threads (ingest, store, feature workers), from
+/// --priority; the sender and the monitor stay at Normal.
+pub static STAGE_PRIORITY: std::sync::OnceLock<Priority> = std::sync::OnceLock::new();
+
+/// Pins a pipeline thread and gives it the stage priority.
+fn pin_stage(cpu: OsCpu) -> Result<(), Error> {
+    pin(Some(cpu))?;
+    let p = STAGE_PRIORITY.get().copied().unwrap_or(Priority::Normal);
+    if p != Priority::Normal {
+        set_current_thread_priority(p)?;
+    }
+    Ok(())
+}
 
 fn pct(sorted: &[u32], p: f64) -> Option<u32> {
     if sorted.is_empty() {
@@ -116,7 +130,7 @@ fn run_shard(
     let ingest = {
         let (done, occ, cpu) = (ingest_done.clone(), occ_ingest.clone(), cores[0]);
         std::thread::spawn(move || -> Result<(), Error> {
-            pin(Some(cpu))?;
+            pin_stage(cpu)?;
             let mut r = BufReader::with_capacity(1 << 16, stream);
             while let Some(f) = Frame::read_from(&mut r)? {
                 push_spin(&mut to_store, (Instant::now(), f));
@@ -132,7 +146,7 @@ fn run_shard(
         let (occ_in, occ_w) = (occ_ingest.clone(), occ_workers.clone());
         let cpu = cores[1];
         std::thread::spawn(move || -> Result<(Vec<u32>, Vec<u32>, u64, u64), Error> {
-            pin(Some(cpu))?;
+            pin_stage(cpu)?;
             let mut acks = BufWriter::new(ack_stream);
             let mut batch: Vec<(Instant, Frame)> = Vec::new();
             let mut ack_us = Vec::new();
@@ -199,7 +213,7 @@ fn run_shard(
         let cpu = cores[2 + w];
         worker_threads.push(std::thread::spawn(
             move || -> Result<(Vec<u32>, Vec<u32>), Error> {
-                pin(Some(cpu))?;
+                pin_stage(cpu)?;
                 let mut windower = Windower::new(&layout);
                 let mut lat = Vec::new();
                 let mut compute = Vec::new();
@@ -232,7 +246,7 @@ fn run_shard(
     drop(row_tx);
     // Feature rows: stored once per second by time (the store core's thread
     // budget; this thread is pinned there too).
-    pin(Some(cores[1]))?;
+    pin_stage(cores[1])?;
     let mut pending = Vec::new();
     let mut windows = 0u64;
     let mut deadline = Instant::now() + Duration::from_secs(1);

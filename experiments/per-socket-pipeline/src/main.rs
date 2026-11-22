@@ -665,6 +665,16 @@ fn main() -> Result<(), Error> {
     let store_dir = PathBuf::from(arg("--store-dir").ok_or("--store-dir is required")?);
     let seconds: u64 = arg("--seconds").map_or(Ok(20), |s| s.parse())?;
     let workers: usize = arg("--workers").map_or(Ok(4), |s| s.parse())?;
+    // Step 2 of the strategy: priority for the step-metrics pipeline threads.
+    let priority = match arg("--priority").as_deref() {
+        None | Some("normal") => stagelanes_arch::Priority::Normal,
+        Some("high") => stagelanes_arch::Priority::High,
+        Some("time-critical") => stagelanes_arch::Priority::TimeCritical,
+        Some(other) => return Err(format!("unknown --priority {other}").into()),
+    };
+    metrics::STAGE_PRIORITY
+        .set(priority)
+        .map_err(|_| "priority set twice")?;
     let topo = Topology::detect()?;
     let result = match layout.as_str() {
         "baseline" => baseline(&store_dir, seconds)?,
