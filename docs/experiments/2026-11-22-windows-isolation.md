@@ -36,6 +36,7 @@ and `windows-irq-affinity.ps1` in `experiments/per-socket-pipeline`.
 | Ryzen step 1 (stock, Balanced) | 696 | 78 µs | 127 µs | 396 µs | 525 µs |
 | Ryzen step 2a (+ Ultimate Performance plan) | 692 | 78 µs | 123 µs | 399 µs | 594 µs |
 | Ryzen step 2b (2a + time-critical priority for pipeline threads) | 694 | 79 µs | 137 µs | 461 µs | 1,137 µs |
+| Ryzen step 2c (2b + device interrupts routed to CPUs 0–1, fresh boot) | 738 | 79 µs | 136 µs | 454 µs | 595 µs |
 
 Run files: `atlas/runs/ryzen/2026-11-22-step1-baseline.json`,
 `…-step2a-power-plan.json`, `…-step2b-priority.json`; Dell:
@@ -71,7 +72,41 @@ What it shows:
    max reaches 1.3 to 26 ms. The per-core interrupt rates rise to 860 to
    950/s.
 
-## Step 2c: interrupt affinity (needs a reboot; not run yet)
+## Step 2c result: device interrupt routing does not narrow the tail
+
+Run file: `atlas/runs/ryzen/2026-11-22-step2c-irq-affinity.json`. Settings
+as step 2b, plus every present PCI device routed to CPUs 0–1 (the
+housekeeping core), applied with `windows-irq-affinity.ps1 -Apply` and a
+reboot.
+
+- **The routing took effect.**
+  - The NVMe's policy changed from 5 (spread across all CPUs) to 4 with
+    mask 0x3.
+  - At idle after the reboot, device DPCs concentrated on CPUs 0–1 (104
+    and 396 per second), with 7 to 53 per second on CPUs 4–12.
+- **The tail did not change.** Window compute p99.9 was 454 µs [407..480]
+  against 461 µs in 2b; p50 was 79 µs in both. The max fell (595 against
+  1,137 µs), but the max varies a lot from run to run.
+- **Pipeline cores still took 738 interrupts and 110 DPCs per second**
+  during the run.
+  - What device routing cannot move: the clock tick, inter-processor
+    interrupts, and the network stack's own DPCs for the sender-to-ingest
+    loopback traffic.
+  - Device interrupts were not what stretched the windows.
+- **The fresh boot did not help either.** It ran with fewer background
+  programs than steps 1 to 2b, so background load is not the cause.
+- **What remains:**
+  - Mainly the SMT sibling of each pipeline core, which Windows still gives
+    to other programs. Disabling SMT in the BIOS would test this directly.
+  - The clock tick, which Windows cannot move off a core.
+
+**Conclusion for Windows.** None of the three Windows levers (power plan,
+thread priority, interrupt routing) changes the p99.9 compute tail.
+Windows cannot isolate a core the way Linux's `isolcpus` and `nohz_full`
+can, so the Dell's step 2 (Linux isolation) is where this tail can really
+be removed.
+
+## Step 2c: how to apply and revert (needs a reboot)
 
 `windows-irq-affinity.ps1 -Apply` sets every present PCI device's
 documented interrupt affinity policy:

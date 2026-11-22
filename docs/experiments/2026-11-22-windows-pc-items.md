@@ -15,7 +15,7 @@ named next to it (`atlas/runs/ryzen/`); means over repeats with
 | 4 | Durable-write latency on the NVMe | Measured |
 | 5 | IoRing batched store writes | See the item 5 section |
 | 6 | DirectStorage feasibility | Researched (below) |
-| 7 | Windows isolation (step 2) | 2a and 2b measured; 2c prepared, needs a reboot. See `2026-11-22-windows-isolation.md` |
+| 7 | Windows isolation (step 2) | 2a, 2b and 2c measured: none narrows the compute tail. See `2026-11-22-windows-isolation.md` |
 | 8 | `stagelanes-pipe` (M6) | Not started: a milestone of its own |
 | 9 | AMD L3 QoS on the 5700X | Checked: not usable |
 
