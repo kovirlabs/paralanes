@@ -3,3 +3,4 @@
 .claude/settings.local.json
 .remember/
 target/
+experiments/per-socket-pipeline/irq-affinity-backup.json
