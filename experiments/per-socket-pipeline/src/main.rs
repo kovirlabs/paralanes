@@ -390,6 +390,266 @@ fn per_socket(
     }))
 }
 
+/// How long feature rows collect before one durable write (by time, not by
+/// row count, so the number of fsyncs does not grow with the worker count).
+const FEATURE_FLUSH: Duration = Duration::from_secs(1);
+
+fn push_spin<T, R: std::ops::Deref<Target = Ring<T, RING>>>(
+    tx: &mut stagelanes_ring::Producer<T, RING, R>,
+    mut item: T,
+) {
+    let mut spins = 0;
+    while let Err(back) = tx.push(item) {
+        item = back;
+        backoff(&mut spins);
+    }
+}
+
+/// Per-socket CPU and memory work with one shared storage stage:
+///
+/// - Socket `s` runs shard `s`'s ingest core and `W` feature cores, as in
+///   `per-socket`.
+/// - One store thread on socket 0 (where all I/O devices attach) drains both
+///   shards' rings and writes each 100 ms batch of both shards as ONE durable
+///   file: one fsync per batch, not one per shard (group commit). It then
+///   acknowledges each shard on its own connection.
+/// - One feature writer on socket 0 collects rows from all workers and
+///   writes them once per second.
+fn shared_store(
+    topo: &Topology,
+    store_dir: &Path,
+    seconds: u64,
+    workers: usize,
+) -> Result<serde_json::Value, Error> {
+    let cores = [cores_on(topo, 0), cores_on(topo, 1)];
+    for (s, c) in cores.iter().enumerate() {
+        // ingest, (store), workers..., (feature writer), sender
+        if c.len() < 4 + workers {
+            return Err(format!("socket {s} needs {} cores", 4 + workers).into());
+        }
+    }
+    let store = Store::open(fresh_dir(store_dir, "shared")?)?;
+    let mut feature_store = store.table_writer();
+    let mut store = store;
+    let ready = Arc::new(Barrier::new(3));
+    let start: Arc<OnceLock<Instant>> = Arc::new(OnceLock::new());
+
+    let (stream_tx, stream_rx) = std::sync::mpsc::channel::<(usize, std::net::TcpStream)>();
+    let ingest_done: [Arc<AtomicBool>; 2] = [Arc::default(), Arc::default()];
+    let store_done = Arc::new(AtomicBool::new(false));
+    let mut from_ingest = Vec::new();
+    let mut ingest_threads = Vec::new();
+    let mut senders = Vec::new();
+    let mut worker_tx: Vec<Vec<_>> = Vec::new();
+    let mut worker_threads = Vec::new();
+    let (row_tx, row_rx) = std::sync::mpsc::channel::<Vec<diagsteno_store::FeatureRow>>();
+    let frames_total = Arc::new(AtomicU64::new(0));
+    let samples_total = Arc::new(AtomicU64::new(0));
+
+    for s in 0..2usize {
+        let layout = shard_layout(s);
+        let listener = TcpListener::bind("127.0.0.1:0")?;
+        let addr = listener.local_addr()?;
+        let (mut tx, rx) = Ring::<Frame, RING>::new().split_arc();
+        from_ingest.push(rx);
+        {
+            let (done, stream_tx, cpu) = (ingest_done[s].clone(), stream_tx.clone(), cores[s][0]);
+            ingest_threads.push(std::thread::spawn(move || -> Result<(), Error> {
+                pin(Some(cpu))?;
+                let (stream, _) = listener.accept()?;
+                stream.set_nodelay(true)?;
+                stream_tx
+                    .send((s, stream.try_clone()?))
+                    .map_err(|_| "store thread gone")?;
+                let mut r = BufReader::with_capacity(1 << 16, stream);
+                while let Some(f) = Frame::read_from(&mut r)? {
+                    push_spin(&mut tx, f);
+                }
+                done.store(true, Ordering::Release);
+                Ok(())
+            }));
+        }
+        let mut txs = Vec::new();
+        for w in 0..workers {
+            let (wtx, mut wrx) = Ring::<Frame, RING>::new().split_arc();
+            txs.push(wtx);
+            let (store_done, layout, row_tx, cpu) = (
+                store_done.clone(),
+                layout.clone(),
+                row_tx.clone(),
+                cores[s][2 + w],
+            );
+            worker_threads.push(std::thread::spawn(move || -> Result<(), Error> {
+                pin(Some(cpu))?;
+                let mut windower = Windower::new(&layout);
+                loop {
+                    let finished = store_done.load(Ordering::Acquire);
+                    let mut rows = Vec::new();
+                    let n = wrx.pop_with(64, |f| {
+                        for win in windower.push(&f) {
+                            rows.push(reference(&win));
+                        }
+                    });
+                    if !rows.is_empty() && row_tx.send(rows).is_err() {
+                        break;
+                    }
+                    if n == 0 {
+                        if finished {
+                            break;
+                        }
+                        std::thread::yield_now();
+                    }
+                }
+                Ok(())
+            }));
+        }
+        worker_tx.push(txs);
+        let (ready, per_tick, sender_core) = (
+            ready.clone(),
+            layout.len(),
+            *cores[s].last().unwrap_or(&cores[s][0]),
+        );
+        senders.push(std::thread::spawn(
+            move || -> Result<sender::SendReport, Error> {
+                pin(Some(sender_core))?;
+                let frames = frames_for(&layout, seconds);
+                ready.wait();
+                Ok(sender::send(addr, frames, per_tick, false)?)
+            },
+        ));
+    }
+    drop(stream_tx);
+    drop(row_tx);
+
+    // The shared store thread.
+    let store_thread = {
+        let (ingest_done, store_done) = (ingest_done.clone(), store_done.clone());
+        let (frames_total, samples_total) = (frames_total.clone(), samples_total.clone());
+        let cpu = cores[0][1];
+        std::thread::spawn(move || -> Result<(), Error> {
+            pin(Some(cpu))?;
+            let mut acks: Vec<Option<BufWriter<std::net::TcpStream>>> = vec![None, None];
+            for (s, stream) in stream_rx.iter().take(2) {
+                acks[s] = Some(BufWriter::new(stream));
+            }
+            let mut batch: Vec<(usize, Frame)> = Vec::new();
+            let mut started = Instant::now();
+            loop {
+                let finished = ingest_done.iter().all(|d| d.load(Ordering::Acquire));
+                let mut n = 0;
+                for (s, rx) in from_ingest.iter_mut().enumerate() {
+                    n += rx.pop_with(1024, |f| batch.push((s, f)));
+                }
+                let drained = finished && n == 0;
+                if !batch.is_empty()
+                    && (started.elapsed() >= BATCH || drained || batch.len() >= 16_384)
+                {
+                    let blocks: Vec<SampleBlock> = batch
+                        .iter()
+                        .map(|(_, f)| SampleBlock {
+                            channel: f.channel,
+                            seq: f.seq,
+                            first_sample: f.first_sample,
+                            sample_rate: f.sample_rate,
+                            samples: f.samples.clone(),
+                        })
+                        .collect();
+                    store.put_samples(&blocks)?; // one fsync for both shards (R8)
+                    for (s, ack) in acks.iter_mut().enumerate() {
+                        let mut last = std::collections::BTreeMap::new();
+                        for (_, f) in batch.iter().filter(|(t, _)| *t == s) {
+                            last.insert(f.channel, f.seq);
+                        }
+                        if let (Some(ack), false) = (ack.as_mut(), last.is_empty()) {
+                            let entries: Vec<(u16, u64)> = last.into_iter().collect();
+                            let _ = write_ack(ack, &entries).and_then(|()| ack.flush());
+                        }
+                    }
+                    frames_total.fetch_add(batch.len() as u64, Ordering::Relaxed);
+                    samples_total.fetch_add(
+                        batch.iter().map(|(_, f)| f.samples.len() as u64).sum(),
+                        Ordering::Relaxed,
+                    );
+                    for (s, f) in batch.drain(..) {
+                        let w = usize::from(f.channel) % worker_tx[s].len();
+                        push_spin(&mut worker_tx[s][w], f);
+                    }
+                    started = Instant::now();
+                } else if drained && batch.is_empty() {
+                    break;
+                } else if n == 0 {
+                    std::thread::yield_now();
+                }
+            }
+            store_done.store(true, Ordering::Release);
+            Ok(())
+        })
+    };
+
+    // The shared feature writer: one durable write per second.
+    let writer = {
+        let cpu = cores[0][2 + workers];
+        let start = start.clone();
+        std::thread::spawn(move || -> Result<(u64, f64), Error> {
+            pin(Some(cpu))?;
+            let mut pending = Vec::new();
+            let mut windows = 0u64;
+            let mut deadline = Instant::now() + FEATURE_FLUSH;
+            loop {
+                let wait = deadline.saturating_duration_since(Instant::now());
+                match row_rx.recv_timeout(wait) {
+                    Ok(rows) => {
+                        pending.extend(rows);
+                        continue;
+                    }
+                    Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {}
+                    Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                }
+                if !pending.is_empty() {
+                    feature_store.put_features(&pending)?;
+                    windows += pending.len() as u64;
+                    pending.clear();
+                }
+                deadline = Instant::now() + FEATURE_FLUSH;
+            }
+            if !pending.is_empty() {
+                feature_store.put_features(&pending)?;
+                windows += pending.len() as u64;
+            }
+            let t0 = start.get().copied().unwrap_or_else(Instant::now);
+            Ok((windows, t0.elapsed().as_secs_f64()))
+        })
+    };
+
+    ready.wait();
+    let _ = start.set(Instant::now());
+    let mut acked_s: f64 = 0.0;
+    let mut errors = Vec::new();
+    for h in senders {
+        let r = h.join().map_err(|_| "sender panicked")??;
+        acked_s = acked_s.max(r.elapsed.as_secs_f64());
+        if let Some(e) = r.error {
+            errors.push(e);
+        }
+    }
+    for h in ingest_threads {
+        h.join().map_err(|_| "ingest panicked")??;
+    }
+    store_thread.join().map_err(|_| "store panicked")??;
+    for h in worker_threads {
+        h.join().map_err(|_| "worker panicked")??;
+    }
+    let (windows, features_s) = writer.join().map_err(|_| "writer panicked")??;
+    Ok(json!({
+        "samples": samples_total.load(Ordering::Relaxed),
+        "frames": frames_total.load(Ordering::Relaxed),
+        "windows": windows,
+        "all_acked_s": acked_s,
+        "all_features_stored_s": features_s,
+        "errors": errors,
+    }))
+}
+
 fn main() -> Result<(), Error> {
     let args: Vec<String> = std::env::args().collect();
     let arg = |k: &str| {
@@ -407,6 +667,7 @@ fn main() -> Result<(), Error> {
         "baseline" => baseline(&store_dir, seconds)?,
         "per-socket" => per_socket(&topo, &store_dir, seconds, workers, true)?,
         "per-socket-unpinned" => per_socket(&topo, &store_dir, seconds, workers, false)?,
+        "per-socket-shared-store" => shared_store(&topo, &store_dir, seconds, workers)?,
         _ => return Err("unknown --layout".into()),
     };
     let samples = result["samples"].as_f64().unwrap_or(0.0);
