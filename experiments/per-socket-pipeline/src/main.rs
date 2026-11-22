@@ -23,6 +23,8 @@
 
 #![forbid(unsafe_code)]
 
+mod metrics;
+
 use std::io::{BufReader, BufWriter, Write};
 use std::net::TcpListener;
 use std::path::{Path, PathBuf};
@@ -41,13 +43,13 @@ use serde_json::json;
 use stagelanes_arch::{OsCpu, Topology, pin_current_thread};
 use stagelanes_ring::Ring;
 
-type Error = Box<dyn std::error::Error + Send + Sync>;
+pub(crate) type Error = Box<dyn std::error::Error + Send + Sync>;
 
-const RING: usize = 4096;
-const BATCH: Duration = Duration::from_millis(100);
+pub(crate) const RING: usize = 4096;
+pub(crate) const BATCH: Duration = Duration::from_millis(100);
 const FEATURE_ROWS_PER_PUT: usize = 256;
 
-fn cores_on(topo: &Topology, node: u32) -> Vec<OsCpu> {
+pub(crate) fn cores_on(topo: &Topology, node: u32) -> Vec<OsCpu> {
     topo.cores
         .iter()
         .filter(|c| c.numa_node == Some(node))
@@ -55,7 +57,7 @@ fn cores_on(topo: &Topology, node: u32) -> Vec<OsCpu> {
         .collect()
 }
 
-fn pin(cpu: Option<OsCpu>) -> Result<(), Error> {
+pub(crate) fn pin(cpu: Option<OsCpu>) -> Result<(), Error> {
     if let Some(c) = cpu {
         pin_current_thread(c)?;
     }
@@ -63,7 +65,7 @@ fn pin(cpu: Option<OsCpu>) -> Result<(), Error> {
 }
 
 /// Spin-then-yield until `f` succeeds.
-fn backoff(spins: &mut u32) {
+pub(crate) fn backoff(spins: &mut u32) {
     *spins += 1;
     if *spins < 64 {
         std::hint::spin_loop();
@@ -73,7 +75,7 @@ fn backoff(spins: &mut u32) {
 }
 
 /// Shard `s` of 2: half of the accelerometers and half of the strain gauges.
-fn shard_layout(s: usize) -> Vec<ChannelSpec> {
+pub(crate) fn shard_layout(s: usize) -> Vec<ChannelSpec> {
     default_layout()
         .into_iter()
         .filter(|c| {
@@ -280,11 +282,11 @@ fn run_shard(
     Ok(())
 }
 
-fn frames_for(layout: &[ChannelSpec], seconds: u64) -> Vec<Frame> {
+pub(crate) fn frames_for(layout: &[ChannelSpec], seconds: u64) -> Vec<Frame> {
     Synth::new(layout, 2026, Some(ticks_for_seconds(seconds))).collect()
 }
 
-fn fresh_dir(base: &Path, name: &str) -> Result<PathBuf, Error> {
+pub(crate) fn fresh_dir(base: &Path, name: &str) -> Result<PathBuf, Error> {
     let d = base.join(name);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d)?;
@@ -668,6 +670,13 @@ fn main() -> Result<(), Error> {
         "per-socket" => per_socket(&topo, &store_dir, seconds, workers, true)?,
         "per-socket-unpinned" => per_socket(&topo, &store_dir, seconds, workers, false)?,
         "per-socket-shared-store" => shared_store(&topo, &store_dir, seconds, workers)?,
+        "step-metrics" => metrics::run(
+            &topo,
+            &store_dir,
+            seconds,
+            workers,
+            args.iter().any(|a| a == "--realtime"),
+        )?,
         _ => return Err("unknown --layout".into()),
     };
     let samples = result["samples"].as_f64().unwrap_or(0.0);
