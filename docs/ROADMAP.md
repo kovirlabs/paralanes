@@ -9,6 +9,33 @@ Outside facts marked "(checked)" come from a web search on 2026-11-22.
 Those marked "(memory)" were not checked and need a landscape check, like
 M0's, before work starts.
 
+## Long-term goal
+
+Stated by Evan on 2026-11-23: optimise CPU and I/O use so that small, light
+hardware can run the large monitoring software (Wazuh, Suricata, Zeek,
+Zabbix), or a form of each where the original cannot be made to fit.
+
+- "A form of them" is what `rulelanes` and `flowlanes` already are: the
+  same job as part of a larger tool, built on pinned stages.
+- Each replacement is checked against the original, as `rulelanes` is
+  against `wazuh-logtest`, and its cost on small hardware is measured, not
+  assumed.
+- **The preferred target is one box:** a single desktop (Mini-ITX or
+  micro-ATX), a NUC-format computer, or a system-on-chip device.
+- Candidate small machines Evan named on 2026-11-23, smallest first:
+
+  | Candidate | Note |
+  | --- | --- |
+  | One or more Raspberry Pis, networked together | The only candidate that spreads the stack over several devices |
+  | One or two NUC-format computers | |
+  | A Mini-ITX or micro-ATX desktop | The Ryzen PC in `docs/machines.md` is a Mini-ITX desktop, so it is the first place the whole stack can be measured |
+  | A light 1U server: two 8-core Xeon Silver CPUs, one or two small GPUs, NVMe | The largest machine that still counts as small |
+
+- None of these has been measured with the stack, and only the Ryzen PC
+  exists in `docs/machines.md`, so no figure here speaks for a small
+  machine yet. Which candidate to buy or test first is an open decision
+  below.
+
 ## What the measurements say a good fit looks like
 
 Every figure is from a run file in `atlas/runs/`; see `atlas/crossover.md`
@@ -35,9 +62,10 @@ byte, arrives in batches, and returns far less than it reads.
 
 | # | Project | Repo | Uses | Status |
 | --- | --- | --- | --- | --- |
-| 1 | Security event decode-and-match engine | `rulelanes` | stagelanes | M0 and M1 done 2026-11-22 (`../rulelanes/docs/status/`); M2 not started |
+| 1 | Security event decode-and-match engine | `rulelanes` | stagelanes | M0 and M1 done 2026-11-22 (`../rulelanes/docs/status/`); M2 is a draft (rulelanes PR #4, 2026-11-23), gate not reached; M3 to M5 not started |
 | 2 | Many-channel sensor reducer | `diagsteno` (extended) | bytelanes, stagelanes | Proposed; recommended next |
-| 3 | Flow collector with a network anomaly engine | `flowlanes` | stagelanes; bytelanes FFT for beaconing | M0 and M1 done 2026-11-22 (`../flowlanes/docs/status/`); M2 (UDP receive) not started |
+| 3 | Flow collector with a network anomaly engine | `flowlanes` | stagelanes; bytelanes FFT for beaconing | M0 to M2 done and merged; it decodes the UniFi gateway's IPFIX export (2026-11-23, `../flowlanes/docs/status/ops-unifi-live.md`); M3 (Wazuh pack) and M4 (detectors) not started |
+| 9 | One-box monitor: Wazuh, Zabbix, Suricata, Zeek on one server | this repo (installer, image) | rulelanes, flowlanes | Direction; only Wazuh runs today. See section 9 |
 | 4 | Group-commit journal | crate in `stagelanes` or its own repo (TBD) | stagelanes | Proposed |
 | 5 | Exact-integer transforms for cryptography | ops in `bytelanes` | bytelanes | Fringe; research first |
 | 6 | Evidence-grade signal features | `diagsteno` | bytelanes | Fringe |
@@ -157,6 +185,19 @@ and Zabbix do between them. He does not run Wazuh yet.
 | Availability and performance | Zabbix | Nothing yet; the `flowlanes` M6 metrics output is the nearest |
 | The box itself | Three separate installs | The M10 appliance image (`paralanes-init`, `image/`) |
 
+Where each piece stands (2026-11-23), so none is forgotten:
+
+| Piece | Runs today | Needs | Next step |
+| --- | --- | --- | --- |
+| Wazuh | Yes, in Docker Desktop on the Ryzen PC; takes UniFi syslog | Docker Desktop running; the PC is off 9:30pm to 9am | Keep; `rulelanes` is the lighter form of its rule engine |
+| `rulelanes` | Benchmark only | M4 (service) before real logs can be pointed at it | Finish M2, then M3, M4 |
+| `flowlanes` | Collector takes live IPFIX from the gateway | M3 so Wazuh can read its events; a host that stays on | M3 Wazuh pack, then M4 detectors |
+| Zabbix | No | Nothing: a container beside Wazuh | Not scheduled; first of the three to add |
+| Suricata | No | A Linux host with a mirror port from the UniFi switch | Evan arranges the host and port |
+| Zeek | No | The same Linux host and mirror port | After Suricata's host exists |
+| One screen | No | The pieces above | Decide after `rulelanes` M2 and `flowlanes` M4 |
+| Always-on host | No | A machine that is not the Ryzen PC | Open decision below |
+
 - **Decided direction (Evan, 2026-11-22): reuse, don't rebuild.** The
   stack runs Wazuh, Zabbix, Suricata and Zeek as they are, side by side in
   containers, and this project builds only what joins them: the installer
@@ -177,6 +218,11 @@ and Zabbix do between them. He does not run Wazuh yet.
   Wazuh server now running in Docker, so there is one place to look.
 - Decide after `rulelanes` M2 and `flowlanes` M4 whether to keep Wazuh as
   the store and screen, or build those too.
+- **Towards the long-term goal:** once the stack runs as it is, measure
+  what each original costs in CPU, memory and disk writes on the target
+  small machine. That measurement decides which piece gets a lighter form
+  next. Suricata, Zeek and Zabbix have no lighter form planned yet; only
+  Wazuh's rule engine (`rulelanes`) and flow collection (`flowlanes`) do.
 
 ## What the data argues against
 
@@ -211,9 +257,13 @@ Decided by Evan on 2026-11-22:
 
 Still open:
 
-- GitHub owner for `rulelanes` and `flowlanes`; both are local repos with
-  no remote.
-- Whether their status files and run files stay in their own repos (the
-  specs assume so) or move here like the other repos'.
-- Both depend on `stagelanes-pipe`, which is on the unmerged branch
-  `m6-stage-pipeline` (stagelanes PR #3, open).
+- Whether the status files and run files of `rulelanes` and `flowlanes`
+  stay in their own repos (the specs assume so) or move here like the
+  other repos'.
+- Which of the candidate small machines (see Long-term goal) is tested
+  first, and whether it is also the always-on Linux host that runs the
+  collector, Zabbix, Suricata and Zeek.
+- When Zabbix is added: it is not in any milestone yet.
+
+Settled since 2026-11-22: both repos are on GitHub under `kovirlabs`, and
+`stagelanes-pipe` is merged to `stagelanes` `main` (PR #3).
