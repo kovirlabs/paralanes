@@ -20,8 +20,21 @@ Zabbix), or a form of each where the original cannot be made to fit.
 - Each replacement is checked against the original, as `rulelanes` is
   against `wazuh-logtest`, and its cost on small hardware is measured, not
   assumed.
-- No small machine is in `docs/machines.md` yet, so no figure here speaks
-  for one. Choosing a target machine is an open decision below.
+- **The preferred target is one box:** a single desktop (Mini-ITX or
+  micro-ATX), a NUC-format computer, or a system-on-chip device.
+- Candidate small machines Evan named on 2026-11-23, smallest first:
+
+  | Candidate | Note |
+  | --- | --- |
+  | One or more Raspberry Pis, networked together | The only candidate that spreads the stack over several devices |
+  | One or two NUC-format computers | |
+  | A Mini-ITX or micro-ATX desktop | The Ryzen PC in `docs/machines.md` is a Mini-ITX desktop, so it is the first place the whole stack can be measured |
+  | A light 1U server: two 8-core Xeon Silver CPUs, one or two small GPUs, NVMe | The largest machine that still counts as small |
+
+- None of these has been measured with the stack, and only the Ryzen PC
+  exists in `docs/machines.md`, so no figure here speaks for a small
+  machine yet. Which candidate to buy or test first is an open decision
+  below.
 
 ## What the measurements say a good fit looks like
 
@@ -247,8 +260,9 @@ Still open:
 - Whether the status files and run files of `rulelanes` and `flowlanes`
   stay in their own repos (the specs assume so) or move here like the
   other repos'.
-- Which small machine is the target for the long-term goal, and which
-  always-on Linux host runs the collector, Zabbix, Suricata and Zeek.
+- Which of the candidate small machines (see Long-term goal) is tested
+  first, and whether it is also the always-on Linux host that runs the
+  collector, Zabbix, Suricata and Zeek.
 - When Zabbix is added: it is not in any milestone yet.
 
 Settled since 2026-11-22: both repos are on GitHub under `kovirlabs`, and
